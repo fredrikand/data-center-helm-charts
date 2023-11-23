@@ -25,32 +25,6 @@ default
 {{- end }}
 
 {{/*
-The name of the ClusterRole that will be created.
-If the name is defined in the chart values, then use that,
-else use the name of the Helm release.
-*/}}
-{{- define "crowd.clusterRoleName" -}}
-{{- if .Values.serviceAccount.clusterRole.name }}
-{{- .Values.serviceAccount.clusterRole.name }}
-{{- else }}
-{{- include "common.names.fullname" . -}}
-{{- end }}
-{{- end }}
-
-{{/*
-The name of the ClusterRoleBinding that will be created.
-If the name is defined in the chart values, then use that,
-else use the name of the ClusterRole.
-*/}}
-{{- define "crowd.clusterRoleBindingName" -}}
-{{- if .Values.serviceAccount.clusterRoleBinding.name }}
-{{- .Values.serviceAccount.clusterRoleBinding.name }}
-{{- else }}
-{{- include "crowd.clusterRoleName" . -}}
-{{- end }}
-{{- end }}
-
-{{/*
 Pod labels
 */}}
 {{- define "crowd.podLabels" -}}
@@ -59,12 +33,8 @@ Pod labels
 {{- end }}
 {{- end }}
 
-{{- define "crowd.sysprop.hazelcastListenPort" -}}
--Dcrowd.cluster.hazelcast.listenPort={{ .Values.crowd.ports.hazelcast }}
-{{- end }}
-
 {{- define "crowd.sysprop.clusterNodeName" -}}
--Dcrowd.clusterNodeName.useHostname={{ .Values.crowd.clustering.usePodNameAsClusterNodeName }}
+-Dcluster.node.name=${KUBE_POD_NAME}
 {{- end }}
 
 {{- define "crowd.sysprop.fluentdAppender" -}}
@@ -74,7 +44,7 @@ Pod labels
 {{/*
 The command that should be run by the nfs-fixer init container to correct the permissions of the shared-home root directory.
 */}}
-{{- define "sharedHome.permissionFix.command" -}}
+{{- define "crowd.sharedHome.permissionFix.command" -}}
 {{- $securityContext := .Values.crowd.securityContext }}
 {{- with .Values.volumes.sharedHome.nfsPermissionFixer }}
     {{- if .command }}
@@ -126,6 +96,10 @@ on Tomcat's logs directory. THis ensures that Tomcat+Crowd logs get captured in 
   {{- if .Values.volumes.sharedHome.subPath }}
   subPath: {{ .Values.volumes.sharedHome.subPath | quote }}
   {{- end }}
+{{- if .Values.crowd.additionalCertificates.secretName }}
+- name: keystore
+  mountPath: /var/ssl
+{{- end }}
 {{ end }}
 
 {{/*
@@ -147,8 +121,8 @@ For each additional library declared, generate a volume mount that injects that 
 Define pod annotations here to allow template overrides when used as a sub chart
 */}}
 {{- define "crowd.podAnnotations" -}}
-{{- with .Values.podAnnotations }}
-{{- toYaml . }}
+{{- range $key, $value := .Values.podAnnotations }}
+{{ $key }}: {{ tpl $value $ | quote }}
 {{- end }}
 {{- end }}
 
@@ -220,6 +194,13 @@ For each additional plugin declared, generate a volume mount that injects that l
 {{- with .Values.volumes.additional }}
 {{- toYaml . | nindent 0 }}
 {{- end }}
+{{- if .Values.crowd.additionalCertificates.secretName }}
+- name: keystore
+  emptyDir: {}
+- name: certs
+  secret:
+    secretName: {{ .Values.crowd.additionalCertificates.secretName }}
+{{- end }}
 {{- end }}
 
 {{- define "crowd.volumes.localHome" -}}
@@ -279,21 +260,6 @@ volumeClaimTemplates:
 {{- end }}
 {{- end }}
 
-{{- define "crowd.clusteringEnvVars" -}}
-{{ if .Values.crowd.clustering.enabled }}
-- name: KUBERNETES_NAMESPACE
-  valueFrom:
-    fieldRef:
-      fieldPath: metadata.namespace
-- name: HAZELCAST_KUBERNETES_SERVICE_NAME
-  value: {{ include "common.names.fullname" . | quote }}
-- name: ATL_CLUSTER_TYPE
-  value: "kubernetes"
-- name: ATL_CLUSTER_NAME
-  value: {{ include "common.names.fullname" . | quote }}
-{{ end }}
-{{ end }}
-
 {{- define "flooredCPU" -}}
     {{- if hasSuffix "m" (. | toString) }}
     {{- div (trimSuffix "m" .) 1000 | default 1 }}
@@ -301,3 +267,21 @@ volumeClaimTemplates:
     {{- . }}
     {{- end }}
 {{- end}}
+
+
+{{/*
+Define additional hosts here to allow template overrides when used as a sub chart
+*/}}
+{{- define "crowd.additionalHosts" -}}
+{{- with .Values.additionalHosts }}
+{{- toYaml . }}
+{{- end }}
+{{- end }}
+
+{{- define "crowd.addCrtToKeystoreCmd" }}
+{{- if .Values.crowd.additionalCertificates.customCmd}}
+{{ .Values.crowd.additionalCertificates.customCmd}}
+{{- else }}
+set -e; cp $JAVA_HOME/lib/security/cacerts /var/ssl/cacerts; for crt in /tmp/crt/*.*; do echo "Adding $crt to keystore"; keytool -import -keystore /var/ssl/cacerts -storepass changeit -noprompt -alias $(echo $(basename $crt)) -file $crt; done;
+{{- end }}
+{{- end }}

@@ -64,7 +64,7 @@ Pod labels
 {{/*
 The command that should be run by the nfs-fixer init container to correct the permissions of the shared-home root directory.
 */}}
-{{- define "sharedHome.permissionFix.command" -}}
+{{- define "bamboo.sharedHome.permissionFix.command" -}}
 {{- $securityContext := .Values.bamboo.securityContext }}
 {{- with .Values.volumes.sharedHome.nfsPermissionFixer }}
     {{- if .command }}
@@ -111,14 +111,18 @@ on Tomcat's logs directory. THis ensures that Tomcat+Bamboo logs get captured in
   {{- if .Values.volumes.sharedHome.subPath }}
   subPath: {{ .Values.volumes.sharedHome.subPath | quote }}
   {{- end }}
+{{- if .Values.bamboo.additionalCertificates.secretName }}
+- name: keystore
+  mountPath: /var/ssl
+{{- end }}
 {{- end }}
 
 {{/*
 Define pod annotations here to allow template overrides when used as a sub chart
 */}}
 {{- define "bamboo.podAnnotations" -}}
-{{- with .Values.podAnnotations }}
-{{- toYaml . }}
+{{- range $key, $value := .Values.podAnnotations }}
+{{ $key }}: {{ tpl $value $ | quote }}
 {{- end }}
 {{- end }}
 
@@ -204,6 +208,13 @@ For each additional plugin declared, generate a volume mount that injects that l
 {{ include "bamboo.volumes.sharedHome" . }}
 {{- with .Values.volumes.additional }}
 {{- toYaml . | nindent 0 }}
+{{- end }}
+{{- if .Values.bamboo.additionalCertificates.secretName }}
+- name: keystore
+  emptyDir: {}
+- name: certs
+  secret:
+    secretName: {{ .Values.bamboo.additionalCertificates.secretName }}
 {{- end }}
 {{- end }}
 
@@ -298,3 +309,20 @@ volumeClaimTemplates:
     {{- . }}
     {{- end }}
 {{- end}}
+
+{{/*
+Define additional hosts here to allow template overrides when used as a sub chart
+*/}}
+{{- define "bamboo.additionalHosts" -}}
+{{- with .Values.additionalHosts }}
+{{- toYaml . }}
+{{- end }}
+{{- end }}
+
+{{- define "bamboo.addCrtToKeystoreCmd" }}
+{{- if .Values.bamboo.additionalCertificates.customCmd}}
+{{ .Values.bamboo.additionalCertificates.customCmd}}
+{{- else }}
+set -e; cp $JAVA_HOME/lib/security/cacerts /var/ssl/cacerts; for crt in /tmp/crt/*.*; do echo "Adding $crt to keystore"; keytool -import -keystore /var/ssl/cacerts -storepass changeit -noprompt -alias $(echo $(basename $crt)) -file $crt; done;
+{{- end }}
+{{- end }}

@@ -5,10 +5,10 @@ kind: ServiceAccount
 metadata:
   name: unittest-bamboo
   labels:
-    helm.sh/chart: bamboo-1.7.1
+    helm.sh/chart: bamboo-1.16.6
     app.kubernetes.io/name: bamboo
     app.kubernetes.io/instance: unittest-bamboo
-    app.kubernetes.io/version: "9.0.1"
+    app.kubernetes.io/version: "9.4.1"
     app.kubernetes.io/managed-by: Helm
 ---
 # Source: bamboo/templates/config-jvm.yaml
@@ -17,16 +17,90 @@ kind: ConfigMap
 metadata:
   name: unittest-bamboo-jvm-config
   labels:
-    helm.sh/chart: bamboo-1.7.1
+    helm.sh/chart: bamboo-1.16.6
     app.kubernetes.io/name: bamboo
     app.kubernetes.io/instance: unittest-bamboo
-    app.kubernetes.io/version: "9.0.1"
+    app.kubernetes.io/version: "9.4.1"
     app.kubernetes.io/managed-by: Helm
 data:
   additional_jvm_args: >-
     -XX:ActiveProcessorCount=2
+    -javaagent:/var/atlassian/application-data/shared-home/jmx_prometheus_javaagent.jar=9999:/opt/atlassian/jmx/jmx-config.yaml
   max_heap: 1024m
   min_heap: 512m
+---
+# Source: bamboo/templates/configmap-jmx-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: unittest-bamboo-jmx-config
+  labels:
+    helm.sh/chart: bamboo-1.16.6
+    app.kubernetes.io/name: bamboo
+    app.kubernetes.io/instance: unittest-bamboo
+    app.kubernetes.io/version: "9.4.1"
+    app.kubernetes.io/managed-by: Helm
+data:
+  jmx-config.yaml: |
+    rules:
+      - pattern: '(java.lang)<type=(\w+)><>(\w+):'
+        name: java_lang_$2_$3
+        labels:
+          product: "bamboo"
+      - pattern: 'java.lang<type=Memory><HeapMemoryUsage>(\w+)'
+        name: java_lang_Memory_HeapMemoryUsage_$1
+        labels:
+          product: "bamboo"
+      - pattern: 'java.lang<name=G1 (\w+) Generation, type=GarbageCollector><>(\w+)'
+        name: java_lang_G1_$1_Generation_$2
+        labels:
+          product: "bamboo"
+      - pattern: '.*'
+---
+# Source: bamboo/templates/service-jms.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: unittest-bamboo-jms
+  labels:
+    helm.sh/chart: bamboo-1.16.6
+    app.kubernetes.io/name: bamboo
+    app.kubernetes.io/instance: unittest-bamboo
+    app.kubernetes.io/version: "9.4.1"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+spec:
+  type: ClusterIP
+  ports:
+    - port: 54663
+      targetPort: jms
+      protocol: TCP
+      name: jms
+  selector:
+    app.kubernetes.io/name: bamboo
+    app.kubernetes.io/instance: unittest-bamboo
+---
+# Source: bamboo/templates/service-jmx.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: unittest-bamboo-jmx
+  labels:
+    helm.sh/chart: bamboo-1.16.6
+    app.kubernetes.io/name: bamboo
+    app.kubernetes.io/instance: unittest-bamboo
+    app.kubernetes.io/version: "9.4.1"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9999
+      targetPort: jmx
+      name: jmx
+  selector:
+    app.kubernetes.io/name: bamboo
+    app.kubernetes.io/instance: unittest-bamboo
 ---
 # Source: bamboo/templates/service.yaml
 apiVersion: v1
@@ -34,14 +108,15 @@ kind: Service
 metadata:
   name: unittest-bamboo
   labels:
-    helm.sh/chart: bamboo-1.7.1
+    helm.sh/chart: bamboo-1.16.6
     app.kubernetes.io/name: bamboo
     app.kubernetes.io/instance: unittest-bamboo
-    app.kubernetes.io/version: "9.0.1"
+    app.kubernetes.io/version: "9.4.1"
     app.kubernetes.io/managed-by: Helm
   annotations:
 spec:
   type: ClusterIP
+  sessionAffinity: None
   ports:
     - port: 80
       targetPort: http
@@ -57,10 +132,10 @@ kind: StatefulSet
 metadata:
   name: unittest-bamboo
   labels:
-    helm.sh/chart: bamboo-1.7.1
+    helm.sh/chart: bamboo-1.16.6
     app.kubernetes.io/name: bamboo
     app.kubernetes.io/instance: unittest-bamboo
-    app.kubernetes.io/version: "9.0.1"
+    app.kubernetes.io/version: "9.4.1"
     app.kubernetes.io/managed-by: Helm
 spec:
   replicas: 1
@@ -72,12 +147,18 @@ spec:
   template:
     metadata:
       annotations:
+        checksum/config-jvm: 202333c4befa8cbb5597ef0ada97cda78d937a39891080ed98aa9bbeb186af31
       labels:
         app.kubernetes.io/name: bamboo
         app.kubernetes.io/instance: unittest-bamboo
     spec:
       serviceAccountName: unittest-bamboo
       terminationGracePeriodSeconds: 30
+      hostAliases:
+        - hostnames:
+          - foo.local
+          - bar.local
+          ip: 127.0.0.1
       securityContext:
         fsGroup: 2005
       initContainers:
@@ -90,9 +171,18 @@ spec:
             - name: shared-home
               mountPath: "/shared-home"
           command: ["sh", "-c", "(chgrp 2005 /shared-home; chmod g+w /shared-home)"]
+        - name: fetch-jmx-exporter
+          image: bitnami/jmx-exporter:0.18.0
+          command: ["cp"]
+          args: ["/opt/bitnami/jmx-exporter/jmx_prometheus_javaagent.jar", "/var/atlassian/application-data/shared-home"]
+          securityContext:
+            runAsUser: 0
+          volumeMounts:
+            - mountPath: "/var/atlassian/application-data/shared-home"
+              name: shared-home
       containers:
         - name: bamboo
-          image: "atlassian/bamboo:9.0.1"
+          image: "atlassian/bamboo:9.4.1"
           imagePullPolicy: IfNotPresent
           env:
             - name: ATL_TOMCAT_SCHEME
@@ -167,12 +257,16 @@ spec:
             - name: jms
               containerPort: 54663
               protocol: TCP
+            - name: jmx
+              containerPort: 9999
+              protocol: TCP
           readinessProbe:
             httpGet:
               port: 8085
               path: /rest/api/latest/status
             initialDelaySeconds: 30
             periodSeconds: 10
+            timeoutSeconds: 1
             failureThreshold: 30
           resources:
             requests:
@@ -186,15 +280,21 @@ spec:
               subPath: "log"
             - name: shared-home
               mountPath: "/var/atlassian/application-data/shared-home"
+            - name: jmx-config
+              mountPath: /opt/atlassian/jmx
           lifecycle:
             preStop:
               exec:
                 command: ["sh", "-c", "/shutdown-wait.sh"]
+      priorityClassName: high
       volumes:
         - name: local-home
           emptyDir: {}
         - name: shared-home
           emptyDir: {}
+        - name: jmx-config
+          configMap:
+            name: unittest-bamboo-jmx-config
 ---
 # Source: bamboo/templates/tests/test-application-status.yaml
 apiVersion: v1
@@ -205,10 +305,10 @@ metadata:
     "helm.sh/hook": test
     "helm.sh/hook-delete-policy": "before-hook-creation,hook-succeeded"
   labels:
-    helm.sh/chart: bamboo-1.7.1
+    helm.sh/chart: bamboo-1.16.6
     app.kubernetes.io/name: bamboo
     app.kubernetes.io/instance: unittest-bamboo
-    app.kubernetes.io/version: "9.0.1"
+    app.kubernetes.io/version: "9.4.1"
     app.kubernetes.io/managed-by: Helm
 spec:
   containers:
@@ -249,10 +349,10 @@ metadata:
     "helm.sh/hook": test
     "helm.sh/hook-delete-policy": "before-hook-creation,hook-succeeded"
   labels:
-    helm.sh/chart: bamboo-1.7.1
+    helm.sh/chart: bamboo-1.16.6
     app.kubernetes.io/name: bamboo
     app.kubernetes.io/instance: unittest-bamboo
-    app.kubernetes.io/version: "9.0.1"
+    app.kubernetes.io/version: "9.4.1"
     app.kubernetes.io/managed-by: Helm
 spec:
   containers:

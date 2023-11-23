@@ -34,6 +34,54 @@ Some key considerations to note when configuring the controller are:
 !!!info "Request body size"
     By default the maximum allowed size for the request body is set to `250MB`. If the size in a request exceeds the maximum size of the client request body, an `413` error will be returned to the client. The maximum request body can be configured by changing the value of `maxBodySize` in `values.yaml`.
 
+
+## :material-directions-fork: LoadBalancer/NodePort Service Type
+
+!!!info "Feature Availability"
+    Service session affinity configuration is available starting from Helm chart version 1.13
+
+It is possible to make the Atlassian product available from outside of the Kubernetes cluster without using an ingress controller.
+
+### NodePort Service Type
+
+When installing Helm release, you can set:
+
+```yaml
+jira:
+  service:
+      type: NodePort
+      sessionAffinity: ClientIP
+      sessionAffinityConfig:
+        clientIP:
+          timeoutSeconds: 10800
+```
+
+The service port will be exposed on a random port from the ephemeral port range (`30000`-`32767`) on all worker nodes. You can provision a LoadBalancer with `443` or `80` (or both) listeners that will forward traffic to the node port (you can get service node port by running `kubectl describe $service -n $namespace`). Both LoadBalancer and Kubernetes service should be configured to maintain session affinity. LoadBalancer session affinity should be configured as per instructions for your Kubernetes/cloud provider. Service session affinity is configured by overriding the default Helm chart values (see the above example). Make sure you configure networking rules to allow the LoadBalancer to communicate with the Kubernetes cluster worker node on the node port.
+
+!!!tip
+    For more information about Kubernetes service session affinity, see [Kubernetes documentation](https://kubernetes.io/docs/reference/networking/virtual-ips/#session-affinity){.external}.
+
+### LoadBalancer Service Type
+    
+LoadBalancer service type is the automated way to expose the service on the node port, create a LoadBalancer for it and configure networking rules allowing communication between the LoadBalancer and the Kubernetes cluster worker nodes:
+
+```yaml
+jira:
+  service:
+      type: LoadBalancer
+      sessionAffinity: ClientIP
+      sessionAffinityConfig:
+        clientIP:
+          timeoutSeconds: 10800
+```
+
+!!!warning "AWS EKS users"
+    If you install the Helm chart for the first time, you will need to skip overriding `sessionAffinity` in your `values.yaml`, otherwise the LoadBalancer will not be created and you will see the following error:
+    ```
+    Error syncing load balancer: failed to ensure load balancer: unsupported load balancer affinity: ClientIP
+    ```
+    Once the Helm chart is installed with the default `sessionAffinity`, run `helm upgrade` with `$productName.service.sessionAffinity` set to `ClientIP`.
+
 ## :material-folder-home: Volumes
 The Data Center products make use of filesystem storage. Each DC node has its own `local-home` volume, and all nodes in the DC cluster share a single `shared-home` volume.
 
@@ -225,6 +273,9 @@ If you wish, you can run multiple Helm releases of the same product in the same 
 ## :fontawesome-solid-network-wired: Clustering
 By default, the Helm charts will not configure the products for Data Center clustering. In order to enable clustering, the `enabled` property for clustering must be set to `true`.
 
+!!!warning "Clustering by default for Crowd"
+	  Crowd does not offer clustering configuration via Helm Chart. Set `crowd.clustering.enabled` to `true/false` in `${CROWD_HOME}/shared/crowd.cfg.xml` and rollout restart Crowd StatefulSet after the initial product setup is complete.
+      
 !!!note ""
 
     === "Jira"
@@ -254,6 +305,10 @@ By default, the Helm charts will not configure the products for Data Center clus
     === "Bamboo"
 
         Because of the limitations outlined under [Bamboo and clustering](../troubleshooting/LIMITATIONS.md#cluster-size) the `clustering` stanza is not available as a configurable property in the Bamboo `values.yaml`.
+
+    === "Crowd"
+
+        Clustering is enabled by default. To disable clustering, set `crowd.clustering.enabled` to `false` in `${CROWD_HOME}/shared/crowd.cfg.xml` and rollout restart Crowd StatefulSet after the initial product setup is complete.
 
 
 In addition, the `shared-home` volume must be correctly configured as a [ReadWriteMany (RWX)](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#access-modes){.external} filesystem (e.g. NFS, [AWS EFS](https://aws.amazon.com/efs/){.external} and [Azure Files](https://docs.microsoft.com/en-us/azure/storage/files/storage-files-introduction){.external})
@@ -334,6 +389,35 @@ container.
 
 For more details on the above, and how 3rd party libraries can be supplied to a Pod see the example [External libraries and plugins](../examples/external_libraries/EXTERNAL_LIBS.md)
 
+### :material-book-cog: P1 Plugins
+
+While `additionalLibraries` and `additionalBundledPlugins` will mount files to `/opt/atlassian/<product-name>/lib` and `/opt/atlassian/<product-name>/<product-name>/WEB-INF/atlassian-bundled-plugins` respectively, plugins built on [Atlassian Plugin Framework 1](https://confluence.atlassian.com/adminjiraserver/important-directories-and-files-938847744.html#Importantdirectoriesandfiles-%3Cjira-application-dir%3E/atlassian-jira/WEB-INF/lib/){.external} need to be stored in `/opt/atlassian/<product-name>/<product-name>/WEB-INF/lib`. While there's no dedicated Helm values stanza for P1 plugins, it is fairly easy to persist them (the below example is for Jira deployed in namespace `atlassian`):
+
+* In your shared-home, create a directory called `p1-plugins`:
+  ```bash
+  kubectl exec -ti jira-0 -n atlassian \
+          -- mkdir -p /var/atlassian/application-data/shared-home/p1-plugins
+  ```
+
+* Copy a P1 plugin to the newly created directory in shared-home:
+  ```bash
+  kubectl cp hello.jar \
+    atlassian/jira-0:/var/atlassian/application-data/shared-home/p1-plugins/hello.jar
+  ```
+
+* Add the following to your custom values:
+  ```yaml
+  jira:
+    additionalVolumeMounts:
+      - name: shared-home
+        mountPath: /opt/atlassian/jira/atlassian-jira/WEB-INF/lib/hello.jar
+        subPath: p1-plugins/hello.jar
+  ```
+
+Run `helm upgrade` to find `/var/atlassian/application-data/shared-home/p1-plugins/hello.jar` mounted into `/opt/atlassian/jira/atlassian-jira/WEB-INF/lib` in all pods of Jira StatefulSet.
+
+You can use the same approach to mount any files from a `shared-home` volume into any location in the container to persist such files across container restarts.
+
 ## :octicons-cpu-16: CPU and memory requests
 
 The Helm charts allow you to specify container-level CPU and memory [resource requests and limits](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#requests-and-limits){.external} e.g.
@@ -392,3 +476,92 @@ The Helm charts also allow you to specify:
 * [`affinities`](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity){.external}.
 
 These are standard Kubernetes structures that will be included in the pods.
+
+## :material-kubernetes: Startup, Readiness and Liveness Probes
+
+### Readiness Probe
+
+By default, a `readinessProbe` is defined for the main (server) container for all Atlassian DC Helm charts. A `readinessProbe` makes `HTTP` calls to the application status endpoint (`/status`). A pod is not marked as ready until the `readinessProbe` receives an `HTTP` response code greater than or equal to `200`, and less than `400`, indicating success.
+
+If a pod is not in a ready state, there is no [endpoint](https://kubernetes.io/docs/concepts/services-networking/service/#endpoints){.external} associated with a [service](https://kubernetes.io/docs/concepts/services-networking/service){.external}, as a result such a pod receives no traffic (if this is the only pod in the `StatefulSet`, you may see `503` response from the [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/){.external}).
+
+It is possible to disable the `readinessProbe` (set `<product>.readinessProbe.enabled=false`) which may make sense if this is the first (cold) start of a DC product in Kubernetes. With a disabled `readinessProbe`, the pod almost immediately becomes ready after it has been started, and the Ingress URL will take you to a page showing node start process. We strongly recommend enabling the `readinessProbe` after the application has been fully migrated and setup in Kubernetes.
+
+Depending on the dataset size, resources allocation and application configuration, you may want to adjust the `readinessProbe` to work best for your particular DC workload:
+
+```yaml
+readinessProbe:
+  # -- Whether to apply the readinessProbe check to pod.
+  #
+  enabled: true
+
+  # -- The initial delay (in seconds) for the container readiness probe,
+  # after which the probe will start running.
+  #
+  initialDelaySeconds: 10
+
+  # -- How often (in seconds) the container readiness probe will run
+  #
+  periodSeconds: 5
+
+  # -- Number of seconds after which the probe times out
+  #
+  timeoutSeconds: 1
+
+  # -- The number of consecutive failures of the container readiness probe
+  # before the pod fails readiness checks.
+  #
+  failureThreshold: 60
+```
+
+### Startup and Liveness Probes
+
+!!!warning "`startupProbe` and `livenessProbe`"
+
+    Both `startupProbe` and `livenessProbe` are disabled by default. Make sure you go through the [Kubernetes documentation](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/){.external} before enabling such probes. Misconfiguration can result in unwanted container restarts and failed "cold" starts.
+
+## :material-certificate: Self Signed Certificates
+
+To add self signed certificates to the default Java truststore, follow the below steps.
+
+* Create a [Kubernetes secret](https://kubernetes.io/docs/concepts/configuration/secret/){.external} containing base64-encoded certificate(s). Here's an example [kubectl command](https://kubernetes.io/docs/tasks/configmap-secret/managing-secret-using-kubectl/#use-source-files){.external} to create a secret from 2 local files:
+
+```shell
+kubectl create secret generic dev-certificates \
+    --from-file=stg.crt=./stg.crt \
+    --from-file=dev.crt=./dev.crt -n $namespace
+```
+
+The resulting secret will have the following data:
+
+```yaml
+data:
+  stg.crt: base64encodedstgcrt
+  dev.crt: base64encodeddevcrt
+```
+
+!!!info "You can have as many keys (certificates) in the secret as required. All keys will be mounted as files to `/tmp/crt` in the container and imported into Java truststore. In the example above, certificates will be mounted as `/tmp/crt/stg.crt` and `/tmp/crt/dev.crt`. File extension in the secret keys does not matter as long as the file is a valid certificate."
+
+* Provide the secret name in Helm values:
+
+```yaml
+jira:
+  additionalCertificates:
+     secretName: dev-certificates
+```
+
+The product Helm chart will add additional `volumeMounts` and `volumes` to the pod(s), as well as an extra init container that will:
+
+* copy the default Java cacerts to a runtime volume shared between the init container and the main container at `/var/ssl`
+* run [keytool -import](https://docs.oracle.com/javase/8/docs/technotes/tools/unix/keytool.html){.external} to import all certificates in `/tmp/crt` mounted from `dev-certificates` secret to `/var/ssl/cacerts`
+
+`-Djavax.net.ssl.trustStore=/var/ssl/cacerts` system property will be automatically added to `JVM_SUPPORT_RECOMMENDED_ARGS` environment variable.
+
+If necessary, it is possible to override the default `keytool -import` command:
+
+```yaml
+jira:
+  additionalCertificates:
+     secretName: dev-certificates
+     customCmd: keytool -import ...
+```

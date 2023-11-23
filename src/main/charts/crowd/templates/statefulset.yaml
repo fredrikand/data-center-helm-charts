@@ -14,6 +14,9 @@ spec:
     metadata:
       annotations:
         checksum/config-jvm: {{ include (print $.Template.BasePath "/config-jvm.yaml") . | sha256sum }}
+        {{- if .Values.additionalConfigMaps }}
+        checksum/config-additional: {{ include (print $.Template.BasePath "/configmap-additional-config.yaml") . | sha256sum }}
+        {{- end }}
         {{- if .Values.fluentd.enabled }}
         checksum/config-fluentd: {{ include (print $.Template.BasePath "/configmap-fluentd.yaml") . | sha256sum }}
         {{- end }}
@@ -24,6 +27,8 @@ spec:
     spec:
       serviceAccountName: {{ include "crowd.serviceAccountName" . }}
       terminationGracePeriodSeconds: {{ .Values.crowd.shutdown.terminationGracePeriodSeconds }}
+      hostAliases:
+        {{- include "crowd.additionalHosts" . | nindent 8 }}
       {{- if .Values.crowd.securityContextEnabled }}
       {{- with .Values.crowd.securityContext }}
       securityContext:
@@ -44,6 +49,12 @@ spec:
         - name: nfs-permission-fixer
           image: {{ .Values.volumes.sharedHome.nfsPermissionFixer.imageRepo }}:{{ .Values.volumes.sharedHome.nfsPermissionFixer.imageTag }}
           imagePullPolicy: IfNotPresent
+          {{- if .Values.volumes.sharedHome.nfsPermissionFixer.resources }}
+          resources:
+          {{- with .Values.volumes.sharedHome.nfsPermissionFixer.resources }}
+          {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- end }}
           securityContext:
             runAsUser: 0 # make sure we run as root so we get the ability to change the volume permissions
           volumeMounts:
@@ -52,27 +63,64 @@ spec:
               {{- if .Values.volumes.sharedHome.subPath }}
               subPath: {{ .Values.volumes.sharedHome.subPath | quote }}
               {{- end }}
-          command: ["sh", "-c", {{ include "sharedHome.permissionFix.command" . | quote }}]
+          command: ["sh", "-c", {{ include "crowd.sharedHome.permissionFix.command" . | quote }}]
+        {{- end }}
+        {{- include "common.jmx.initContainer" . | nindent 8 }}
+        {{- if .Values.crowd.additionalCertificates.secretName }}
+        - name: import-certs
+          image: {{ include "crowd.image" . | quote }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          volumeMounts:
+            - name: keystore
+              mountPath: /var/ssl
+            - name: certs
+              mountPath: /tmp/crt
+          command: ["/bin/bash"]
+          args: ["-c", {{ include "crowd.addCrtToKeystoreCmd" . }}]
         {{- end }}
       containers:
-        - name: crowd
+        - name: {{ if .Values.crowd.useHelmReleaseNameAsContainerName}}{{ include "common.names.fullname" . }}{{ else }}{{ .Chart.Name }}{{ end }}
           image: {{ include "crowd.image" . | quote }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: http
               containerPort: {{ .Values.crowd.ports.http }}
               protocol: TCP
-            - name: hazelcast
-              containerPort: {{ .Values.crowd.ports.hazelcast }}
-              protocol: TCP
             {{- include "crowd.additionalPorts" . | nindent 12 }}
+            {{- include "common.jmx.port" . | nindent 12 }}
+          {{- if .Values.crowd.readinessProbe.enabled }}
           readinessProbe:
+            {{- if .Values.crowd.readinessProbe.customProbe}}
+            {{- with .Values.crowd.readinessProbe.customProbe }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+            {{- else }}
             httpGet:
               port: {{ .Values.crowd.ports.http }}
-              path: /
+              path: /crowd/status
             initialDelaySeconds: {{ .Values.crowd.readinessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.crowd.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.crowd.readinessProbe.timeoutSeconds }}
             failureThreshold: {{ .Values.crowd.readinessProbe.failureThreshold }}
+            {{- end }}
+          {{- end }}
+          {{- if .Values.crowd.startupProbe.enabled }}
+          startupProbe:
+            tcpSocket:
+              port: {{ .Values.crowd.ports.http }}
+            initialDelaySeconds: {{ .Values.crowd.startupProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.crowd.startupProbe.periodSeconds }}
+            failureThreshold: {{ .Values.crowd.startupProbe.failureThreshold }}
+          {{- end }}
+          {{- if .Values.crowd.livenessProbe.enabled }}
+          livenessProbe:
+            tcpSocket:
+              port: {{ .Values.crowd.ports.http }}
+            initialDelaySeconds: {{ .Values.crowd.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.crowd.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.crowd.livenessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.crowd.livenessProbe.failureThreshold }}
+          {{ end }}
           {{- with .Values.crowd.containerSecurityContext}}
           securityContext:
           {{- toYaml . | nindent 12}}
@@ -83,6 +131,7 @@ spec:
           {{- end }}
           volumeMounts:
             {{- include "crowd.volumeMounts" . | nindent 12 }}
+            {{- include "common.jmx.config.volumeMounts" . | nindent 12 }}
             {{- include "crowd.additionalVolumeMounts" . | nindent 12 }}
             {{- include "crowd.additionalLibraries" . | nindent 12 }}
             {{- include "crowd.additionalBundledPlugins" . | nindent 12 }}
@@ -91,7 +140,18 @@ spec:
               mountPath: {{ .mountPath }}/{{ .key }}
               subPath: {{ .key }}
             {{ end }}
+            {{- range $i, $n := .Values.additionalConfigMaps }}
+            {{- range .keys }}
+            - name: {{ .fileName | replace "_" "-" | replace "." "-" }}
+              mountPath: {{ .mountPath }}/{{ .fileName }}
+              subPath: {{ .fileName }}
+            {{ end }}
+            {{- end }}
           env:
+            - name: KUBE_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
             {{ if .Values.ingress.https }}
             - name: ATL_TOMCAT_SCHEME
               value: "https"
@@ -152,6 +212,9 @@ spec:
       topologySpreadConstraints:
       {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- if .Values.priorityClassName }}
+      priorityClassName: {{ .Values.priorityClassName }}
+      {{- end }}
       {{- if .Values.schedulerName }}
       schedulerName: {{ .Values.schedulerName  | quote }}
       {{- end }}
@@ -164,6 +227,22 @@ spec:
               - key: {{ .key }}
                 path: {{ .key }}
         {{ end }}
+        {{- range $i, $key := .Values.additionalConfigMaps }}
+        {{- with $ }}
+        {{- range $key.keys }}
+        - name: {{ .fileName | replace "_" "-" | replace "." "-" }}
+          configMap:
+            name: {{ include "common.names.fullname" $ }}-{{ $key.name }}
+            {{- if .defaultMode }}
+            defaultMode: {{ .defaultMode }}
+            {{- end }}
+            items:
+              - key: {{ .fileName }}
+                path: {{ .fileName }}
+            {{- end }}
+        {{ end }}
+        {{- end }}
         {{ include "crowd.volumes" . | nindent 8 }}
         {{ include "fluentd.config.volume" . | nindent 8 }}
+        {{ include "common.jmx.config.volume" . | nindent 8 }}
   {{ include "crowd.volumeClaimTemplates" . | nindent 2 }}

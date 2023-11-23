@@ -5,10 +5,10 @@ kind: ServiceAccount
 metadata:
   name: unittest-bamboo-agent
   labels:
-    helm.sh/chart: bamboo-agent-1.7.1
+    helm.sh/chart: bamboo-agent-1.16.6
     app.kubernetes.io/name: bamboo-agent
     app.kubernetes.io/instance: unittest-bamboo-agent
-    app.kubernetes.io/version: "9.0.1"
+    app.kubernetes.io/version: "9.4.1"
     app.kubernetes.io/managed-by: Helm
 ---
 # Source: bamboo-agent/templates/config-jvm.yaml
@@ -17,10 +17,10 @@ kind: ConfigMap
 metadata:
   name: unittest-bamboo-agent-jvm-config
   labels:
-    helm.sh/chart: bamboo-agent-1.7.1
+    helm.sh/chart: bamboo-agent-1.16.6
     app.kubernetes.io/name: bamboo-agent
     app.kubernetes.io/instance: unittest-bamboo-agent
-    app.kubernetes.io/version: "9.0.1"
+    app.kubernetes.io/version: "9.4.1"
     app.kubernetes.io/managed-by: Helm
 data:
   max_heap: 512m
@@ -32,10 +32,10 @@ kind: Deployment
 metadata:
   name: unittest-bamboo-agent
   labels:
-    helm.sh/chart: bamboo-agent-1.7.1
+    helm.sh/chart: bamboo-agent-1.16.6
     app.kubernetes.io/name: bamboo-agent
     app.kubernetes.io/instance: unittest-bamboo-agent
-    app.kubernetes.io/version: "9.0.1"
+    app.kubernetes.io/version: "9.4.1"
     app.kubernetes.io/managed-by: Helm
 spec:
   replicas: 1
@@ -46,18 +46,24 @@ spec:
   template:
     metadata:
       annotations:
+        checksum/config-jvm: 75e9d7f567f72cd0edfa35ced820e061ca73a2cc4d365e31a8380aeb51132034
       labels:
         app.kubernetes.io/name: bamboo-agent
         app.kubernetes.io/instance: unittest-bamboo-agent
     spec:
       serviceAccountName: unittest-bamboo-agent
       terminationGracePeriodSeconds: 30
+      hostAliases:
+        - hostnames:
+          - foo.local
+          - bar.local
+          ip: 127.0.0.1
       securityContext:
         fsGroup: 2005
       initContainers:
       containers:
         - name: bamboo-agent
-          image: "atlassian/bamboo-agent-base:9.0.1"
+          image: "atlassian/bamboo-agent-base:9.4.1"
           imagePullPolicy: IfNotPresent
           env:
             - name: BAMBOO_SERVER
@@ -88,7 +94,6 @@ spec:
             requests:
               cpu: "1"
               memory: 2G
-          lifecycle:
-            preStop:
-              exec:
-                command: ["sh", "-c", "/shutdown-wait.sh"]
+          volumeMounts:
+      priorityClassName: high
+      volumes:

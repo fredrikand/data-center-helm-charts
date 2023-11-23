@@ -1,9 +1,11 @@
 nav:
     - PREREQUISITES.md
+    - VERIFICATION.md
     - INSTALLATION.md
     - CONFIGURATION.md
     - MIGRATION.md
     - OPERATION.md
+    - monitoring
     - upgrades
     - resource_management
     - ...

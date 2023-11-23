@@ -14,6 +14,9 @@ spec:
     metadata:
       annotations:
         checksum/config-jvm: {{ include (print $.Template.BasePath "/config-jvm.yaml") . | sha256sum }}
+        {{- if .Values.additionalConfigMaps }}
+        checksum/config-additional: {{ include (print $.Template.BasePath "/configmap-additional-config.yaml") . | sha256sum }}
+        {{- end }}
         {{- if .Values.fluentd.enabled }}
         checksum/config-fluentd: {{ include (print $.Template.BasePath "/configmap-fluentd.yaml") . | sha256sum }}
         {{- end }}
@@ -46,6 +49,12 @@ spec:
         - name: nfs-permission-fixer
           image: {{ .Values.volumes.sharedHome.nfsPermissionFixer.imageRepo }}:{{ .Values.volumes.sharedHome.nfsPermissionFixer.imageTag }}
           imagePullPolicy: IfNotPresent
+          {{- if .Values.volumes.sharedHome.nfsPermissionFixer.resources }}
+          resources:
+          {{- with .Values.volumes.sharedHome.nfsPermissionFixer.resources }}
+          {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- end }}
           securityContext:
             runAsUser: 0 # make sure we run as root so we get the ability to change the volume permissions
           volumeMounts:
@@ -54,10 +63,23 @@ spec:
               {{- if .Values.volumes.sharedHome.subPath }}
               subPath: {{ .Values.volumes.sharedHome.subPath | quote }}
               {{- end }}
-          command: ["sh", "-c", {{ include "sharedHome.permissionFix.command" . | quote }}]
+          command: ["sh", "-c", {{ include "confluence.sharedHome.permissionFix.command" . | quote }}]
+        {{- end }}
+        {{- include "common.jmx.initContainer" . | nindent 8 }}
+        {{- if .Values.confluence.additionalCertificates.secretName }}
+        - name: import-certs
+          image: {{ include "confluence.image" . | quote }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          volumeMounts:
+            - name: keystore
+              mountPath: /var/ssl
+            - name: certs
+              mountPath: /tmp/crt
+          command: ["/bin/bash"]
+          args: ["-c", {{ include "confluence.addCrtToKeystoreCmd" . }}]
         {{- end }}
       containers:
-        - name: confluence
+        - name: {{ if .Values.confluence.useHelmReleaseNameAsContainerName}}{{ include "common.names.fullname" . }}{{ else }}{{ .Chart.Name }}{{ end }}
           image: {{ include "confluence.image" . | quote }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
@@ -67,14 +89,41 @@ spec:
             - name: hazelcast
               containerPort: {{ .Values.confluence.ports.hazelcast }}
               protocol: TCP
+            {{- include "common.jmx.port" . | nindent 12 }}
             {{- include "confluence.additionalPorts" . | nindent 12 }}
+          {{- if .Values.confluence.readinessProbe.enabled }}
           readinessProbe:
+            {{- if .Values.confluence.readinessProbe.customProbe}}
+            {{- with .Values.confluence.readinessProbe.customProbe }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+            {{- else }}
             httpGet:
               port: {{ .Values.confluence.ports.http }}
               path: {{ .Values.confluence.service.contextPath }}/status
             initialDelaySeconds: {{ .Values.confluence.readinessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.confluence.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.confluence.readinessProbe.timeoutSeconds }}
             failureThreshold: {{ .Values.confluence.readinessProbe.failureThreshold }}
+            {{- end }}
+          {{- end }}
+          {{- if .Values.confluence.startupProbe.enabled }}
+          startupProbe:
+            tcpSocket:
+              port: {{ .Values.confluence.ports.http }}
+            initialDelaySeconds: {{ .Values.confluence.startupProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.confluence.startupProbe.periodSeconds }}
+            failureThreshold: {{ .Values.confluence.startupProbe.failureThreshold }}
+          {{- end }}
+          {{- if .Values.confluence.livenessProbe.enabled }}
+          livenessProbe:
+            tcpSocket:
+              port: {{ .Values.confluence.ports.http }}
+            initialDelaySeconds: {{ .Values.confluence.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.confluence.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.confluence.livenessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.confluence.livenessProbe.failureThreshold }}
+          {{ end }}
           {{- with .Values.confluence.containerSecurityContext}}
           securityContext:
           {{- toYaml . | nindent 12}}
@@ -85,6 +134,7 @@ spec:
           {{- end }}
           volumeMounts:
             {{- include "confluence.volumeMounts" . | nindent 12 }}
+            {{- include "common.jmx.config.volumeMounts" . | nindent 12 }}
             {{- include "confluence.additionalVolumeMounts" . | nindent 12 }}
             {{- include "confluence.additionalLibraries" . | nindent 12 }}
             {{- include "confluence.additionalBundledPlugins" . | nindent 12 }}
@@ -93,6 +143,13 @@ spec:
               mountPath: {{ .mountPath }}/{{ .key }}
               subPath: {{ .key }}
             {{ end }}
+            {{- range $i, $n := .Values.additionalConfigMaps }}
+            {{- range .keys }}
+            - name: {{ .fileName | replace "_" "-" | replace "." "-" }}
+              mountPath: {{ .mountPath }}/{{ .fileName }}
+              subPath: {{ .fileName }}
+            {{ end }}
+            {{- end }}
           env:
             {{ if .Values.ingress.https }}
             - name: ATL_TOMCAT_SCHEME
@@ -172,6 +229,9 @@ spec:
       topologySpreadConstraints:
       {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- if .Values.priorityClassName }}
+      priorityClassName: {{ .Values.priorityClassName }}
+      {{- end }}
       {{- if .Values.schedulerName }}
       schedulerName: {{ .Values.schedulerName  | quote }}
       {{- end }}
@@ -184,6 +244,22 @@ spec:
               - key: {{ .key }}
                 path: {{ .key }}
         {{ end }}
+        {{- range $i, $key := .Values.additionalConfigMaps }}
+        {{- with $ }}
+        {{- range $key.keys }}
+        - name: {{ .fileName | replace "_" "-" | replace "." "-" }}
+          configMap:
+            name: {{ include "common.names.fullname" $ }}-{{ $key.name }}
+            {{- if .defaultMode }}
+            defaultMode: {{ .defaultMode }}
+            {{- end }}
+            items:
+              - key: {{ .fileName }}
+                path: {{ .fileName }}
+            {{- end }}
+        {{ end }}
+        {{- end }}
         {{ include "confluence.volumes" . | nindent 8 }}
         {{ include "fluentd.config.volume" . | nindent 8 }}
+        {{ include "common.jmx.config.volume" . | nindent 8 }}
   {{ include "confluence.volumeClaimTemplates" . | nindent 2 }}

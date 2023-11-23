@@ -5,11 +5,29 @@ kind: ServiceAccount
 metadata:
   name: unittest-bitbucket
   labels:
-    helm.sh/chart: bitbucket-1.7.1
+    helm.sh/chart: bitbucket-1.16.6
     app.kubernetes.io/name: bitbucket
     app.kubernetes.io/instance: unittest-bitbucket
-    app.kubernetes.io/version: "7.21.7"
+    app.kubernetes.io/version: "8.9.7"
     app.kubernetes.io/managed-by: Helm
+---
+# Source: bitbucket/templates/config-jvm-mesh.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: unittest-bitbucket-jvm-config-mesh
+  labels:
+    helm.sh/chart: bitbucket-1.16.6
+    app.kubernetes.io/name: bitbucket
+    app.kubernetes.io/instance: unittest-bitbucket
+    app.kubernetes.io/version: "8.9.7"
+    app.kubernetes.io/managed-by: Helm
+data:
+  additional_jvm_args: >-
+    -XX:ActiveProcessorCount=1
+    -javaagent:/var/atlassian/application-data/mesh/jmx_prometheus_javaagent.jar=9999:/opt/atlassian/jmx/jmx-config.yaml
+  max_heap: 1g
+  min_heap: 512m
 ---
 # Source: bitbucket/templates/config-jvm.yaml
 apiVersion: v1
@@ -17,16 +35,140 @@ kind: ConfigMap
 metadata:
   name: unittest-bitbucket-jvm-config
   labels:
-    helm.sh/chart: bitbucket-1.7.1
+    helm.sh/chart: bitbucket-1.16.6
     app.kubernetes.io/name: bitbucket
     app.kubernetes.io/instance: unittest-bitbucket
-    app.kubernetes.io/version: "7.21.7"
+    app.kubernetes.io/version: "8.9.7"
     app.kubernetes.io/managed-by: Helm
 data:
   additional_jvm_args: >-
     -XX:ActiveProcessorCount=2
+    -javaagent:/var/atlassian/application-data/shared-home/jmx_prometheus_javaagent.jar=9999:/opt/atlassian/jmx/jmx-config.yaml
+    -Dplugin.bitbucket-git.mesh.sidecar.jvmArgs=-javaagent:/var/atlassian/application-data/shared-home/jmx_prometheus_javaagent.jar=9998:/opt/atlassian/jmx/jmx-config.yaml
   max_heap: 1g
   min_heap: 512m
+---
+# Source: bitbucket/templates/configmap-jmx-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: unittest-bitbucket-jmx-config
+  labels:
+    helm.sh/chart: bitbucket-1.16.6
+    app.kubernetes.io/name: bitbucket
+    app.kubernetes.io/instance: unittest-bitbucket
+    app.kubernetes.io/version: "8.9.7"
+    app.kubernetes.io/managed-by: Helm
+data:
+  jmx-config.yaml: |
+    rules:
+    - pattern: '(java.lang)<type=(\w+)><>(\w+):'
+      name: java_lang_$2_$3
+    - pattern: 'java.lang<type=Memory><HeapMemoryUsage>(\w+)'
+      name: java_lang_Memory_HeapMemoryUsage_$1
+    - pattern: 'java.lang<name=G1 (\w+) Generation, type=GarbageCollector><>(\w+)'
+      name: java_lang_G1_$1_Generation_$2
+    - pattern: '.*'
+---
+# Source: bitbucket/templates/service-jmx.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: unittest-bitbucket-jmx
+  labels:
+    helm.sh/chart: bitbucket-1.16.6
+    app.kubernetes.io/name: bitbucket
+    app.kubernetes.io/instance: unittest-bitbucket
+    app.kubernetes.io/version: "8.9.7"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9999
+      targetPort: jmx
+      name: jmx
+    - port: 9998
+      targetPort: 9998
+      name: jmx-mesh-sidecar
+  selector:
+    app.kubernetes.io/name: bitbucket
+    app.kubernetes.io/instance: unittest-bitbucket
+---
+# Source: bitbucket/templates/service-mesh.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: unittest-bitbucket-mesh-0
+  labels:
+    helm.sh/chart: bitbucket-1.16.6
+    app.kubernetes.io/name: bitbucket
+    app.kubernetes.io/instance: unittest-bitbucket
+    app.kubernetes.io/version: "8.9.7"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+spec:
+  type: ClusterIP
+  ports:
+    - port: 7777
+      targetPort: mesh
+      protocol: TCP
+      name: mesh
+    - port: 9999
+      targetPort: jmx
+      name: jmx
+  selector:
+    statefulset.kubernetes.io/pod-name: unittest-bitbucket-mesh-0
+---
+# Source: bitbucket/templates/service-mesh.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: unittest-bitbucket-mesh-1
+  labels:
+    helm.sh/chart: bitbucket-1.16.6
+    app.kubernetes.io/name: bitbucket
+    app.kubernetes.io/instance: unittest-bitbucket
+    app.kubernetes.io/version: "8.9.7"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+spec:
+  type: ClusterIP
+  ports:
+    - port: 7777
+      targetPort: mesh
+      protocol: TCP
+      name: mesh
+    - port: 9999
+      targetPort: jmx
+      name: jmx
+  selector:
+    statefulset.kubernetes.io/pod-name: unittest-bitbucket-mesh-1
+---
+# Source: bitbucket/templates/service-mesh.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: unittest-bitbucket-mesh-2
+  labels:
+    helm.sh/chart: bitbucket-1.16.6
+    app.kubernetes.io/name: bitbucket
+    app.kubernetes.io/instance: unittest-bitbucket
+    app.kubernetes.io/version: "8.9.7"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+spec:
+  type: ClusterIP
+  ports:
+    - port: 7777
+      targetPort: mesh
+      protocol: TCP
+      name: mesh
+    - port: 9999
+      targetPort: jmx
+      name: jmx
+  selector:
+    statefulset.kubernetes.io/pod-name: unittest-bitbucket-mesh-2
 ---
 # Source: bitbucket/templates/service.yaml
 apiVersion: v1
@@ -34,14 +176,15 @@ kind: Service
 metadata:
   name: unittest-bitbucket
   labels:
-    helm.sh/chart: bitbucket-1.7.1
+    helm.sh/chart: bitbucket-1.16.6
     app.kubernetes.io/name: bitbucket
     app.kubernetes.io/instance: unittest-bitbucket
-    app.kubernetes.io/version: "7.21.7"
+    app.kubernetes.io/version: "8.9.7"
     app.kubernetes.io/managed-by: Helm
   annotations:
 spec:
   type: ClusterIP
+  sessionAffinity: None
   ports:
     - port: 80
       targetPort: http
@@ -59,16 +202,139 @@ spec:
     app.kubernetes.io/name: bitbucket
     app.kubernetes.io/instance: unittest-bitbucket
 ---
+# Source: bitbucket/templates/statefulset-mesh.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: unittest-bitbucket-mesh
+  labels:
+    helm.sh/chart: bitbucket-1.16.6
+    app.kubernetes.io/name: bitbucket
+    app.kubernetes.io/instance: unittest-bitbucket
+    app.kubernetes.io/version: "8.9.7"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 3
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      partition: 0
+  podManagementPolicy: OrderedReady
+  serviceName: unittest-bitbucket-mesh
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: bitbucket-mesh
+      app.kubernetes.io/instance: unittest-bitbucket
+  template:
+    metadata:
+      annotations:
+        checksum/config-jvm: 490b92b465e61f7996bc4864ed329948f36d7a2a859ad0bf2dfd7f9e467ad50c
+      labels:
+        app.kubernetes.io/name: bitbucket-mesh
+        app.kubernetes.io/instance: unittest-bitbucket
+    spec:
+      serviceAccountName: unittest-bitbucket
+      terminationGracePeriodSeconds: 35
+      hostAliases:
+        - hostnames:
+          - foo.local
+          - bar.local
+          ip: 127.0.0.1
+      initContainers:
+        - name: fetch-jmx-exporter
+          image: bitnami/jmx-exporter:0.18.0
+          command: ["cp"]
+          args: ["/opt/bitnami/jmx-exporter/jmx_prometheus_javaagent.jar", "/var/atlassian/application-data/mesh"]
+          volumeMounts:
+            - mountPath: "/var/atlassian/application-data/mesh"
+              name: mesh-home
+          securityContext:
+            runAsUser: 0 # make sure we run as root to avoid permission denied
+      containers:
+        - name: bitbucket-mesh
+          image: atlassian/bitbucket-mesh:2.0.1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: mesh
+              containerPort: 7777
+              protocol: TCP
+            - name: jmx
+              containerPort: 9999
+              protocol: TCP
+          readinessProbe:
+            tcpSocket:
+              port: 7777
+            periodSeconds: 5
+            failureThreshold: 60
+            initialDelaySeconds: 10
+          volumeMounts:
+            - name: mesh-home
+              mountPath: "/var/atlassian/application-data/mesh"
+            - name: jmx-config
+              mountPath: /opt/atlassian/jmx
+          resources:
+            limits:
+              cpu: "2"
+              memory: 2G
+            requests:
+              cpu: "1"
+              memory: 2G
+          env:
+            - name: GRPC_SERVER_PORT
+              value: "7777"
+            - name: MESH_HOME
+              value: /var/atlassian/application-data/mesh
+            - name: KUBE_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: JAVA_OPTS
+              value: "-Dcluster.node.name=$(KUBE_POD_NAME)"
+            - name: JVM_MINIMUM_MEMORY
+              valueFrom:
+                configMapKeyRef:
+                  key: min_heap
+                  name: unittest-bitbucket-jvm-config-mesh
+            - name: JVM_MAXIMUM_MEMORY
+              valueFrom:
+                configMapKeyRef:
+                  key: max_heap
+                  name: unittest-bitbucket-jvm-config-mesh
+            - name: JVM_SUPPORT_RECOMMENDED_ARGS
+              valueFrom:
+                configMapKeyRef:
+                  key: additional_jvm_args
+                  name: unittest-bitbucket-jvm-config-mesh
+            - name: JMX_ENABLED
+              value: "true"
+          lifecycle:
+            preStop:
+              exec:
+                command: ["sh", "-c", "/shutdown-wait.sh"]
+      priorityClassName: high
+      volumes:
+        - name: jmx-config
+          configMap:
+            name: unittest-bitbucket-jmx-config
+  volumeClaimTemplates:
+  - metadata:
+      name: mesh-home
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
+---
 # Source: bitbucket/templates/statefulset.yaml
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: unittest-bitbucket
   labels:
-    helm.sh/chart: bitbucket-1.7.1
+    helm.sh/chart: bitbucket-1.16.6
     app.kubernetes.io/name: bitbucket
     app.kubernetes.io/instance: unittest-bitbucket
-    app.kubernetes.io/version: "7.21.7"
+    app.kubernetes.io/version: "8.9.7"
     app.kubernetes.io/managed-by: Helm
 spec:
   replicas: 1
@@ -85,18 +351,33 @@ spec:
   template:
     metadata:
       annotations:
+        checksum/config-jvm: 39cc41614a568928a84fc8decee1855331d38764d8f9dba4aceded9040cda9ea
       labels:
         app.kubernetes.io/name: bitbucket
         app.kubernetes.io/instance: unittest-bitbucket
     spec:
       serviceAccountName: unittest-bitbucket
       terminationGracePeriodSeconds: 35
+      hostAliases:
+        - hostnames:
+          - foo.local
+          - bar.local
+          ip: 127.0.0.1
       securityContext:
         fsGroup: 2003
       initContainers:
+        - name: fetch-jmx-exporter
+          image: bitnami/jmx-exporter:0.18.0
+          command: ["cp"]
+          args: ["/opt/bitnami/jmx-exporter/jmx_prometheus_javaagent.jar", "/var/atlassian/application-data/shared-home"]
+          securityContext:
+            runAsUser: 0
+          volumeMounts:
+            - mountPath: "/var/atlassian/application-data/shared-home"
+              name: shared-home
       containers:
         - name: bitbucket
-          image: "atlassian/bitbucket:7.21.7"
+          image: "atlassian/bitbucket:8.9.7"
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -108,16 +389,22 @@ spec:
             - name: hazelcast
               containerPort: 5701
               protocol: TCP
+            - name: jmx
+              containerPort: 9999
+              protocol: TCP
           readinessProbe:
             httpGet:
               port: 7990
               path: /status
-            periodSeconds: 5
-            failureThreshold: 60
             initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 1
+            failureThreshold: 60
           volumeMounts:
             - name: local-home
               mountPath: "/var/atlassian/application-data/bitbucket"
+            - name: jmx-config
+              mountPath: /opt/atlassian/jmx
           resources:
             requests:
               cpu: "2"
@@ -129,6 +416,8 @@ spec:
                   fieldPath: metadata.name
             - name: JAVA_OPTS
               value: "-Dcluster.node.name=$(KUBE_POD_NAME)"
+            - name: PLUGIN_SSH_PORT
+              value: "7999"
             - name: SERVER_CONTEXT_PATH
               value: "/"
             - name: SERVER_PORT
@@ -156,13 +445,19 @@ spec:
                   name: unittest-bitbucket-jvm-config
             - name: APPLICATION_MODE
               value: "default"
+            - name: JMX_ENABLED
+              value: "true"
           lifecycle:
             preStop:
               exec:
                 command: ["sh", "-c", "/shutdown-wait.sh"]
+      priorityClassName: high
       volumes:
         - name: local-home
           emptyDir: {}
+        - name: jmx-config
+          configMap:
+            name: unittest-bitbucket-jmx-config
 ---
 # Source: bitbucket/templates/tests/test-application-status.yaml
 apiVersion: v1
@@ -173,10 +468,10 @@ metadata:
     "helm.sh/hook": test
     "helm.sh/hook-delete-policy": "before-hook-creation,hook-succeeded"
   labels:
-    helm.sh/chart: bitbucket-1.7.1
+    helm.sh/chart: bitbucket-1.16.6
     app.kubernetes.io/name: bitbucket
     app.kubernetes.io/instance: unittest-bitbucket
-    app.kubernetes.io/version: "7.21.7"
+    app.kubernetes.io/version: "8.9.7"
     app.kubernetes.io/managed-by: Helm
 spec:
   containers:
@@ -205,10 +500,10 @@ metadata:
     "helm.sh/hook": test
     "helm.sh/hook-delete-policy": "before-hook-creation,hook-succeeded"
   labels:
-    helm.sh/chart: bitbucket-1.7.1
+    helm.sh/chart: bitbucket-1.16.6
     app.kubernetes.io/name: bitbucket
     app.kubernetes.io/instance: unittest-bitbucket
-    app.kubernetes.io/version: "7.21.7"
+    app.kubernetes.io/version: "8.9.7"
     app.kubernetes.io/managed-by: Helm
 spec:
   containers:

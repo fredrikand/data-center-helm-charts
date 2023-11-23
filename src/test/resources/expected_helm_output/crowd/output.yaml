@@ -5,10 +5,10 @@ kind: ServiceAccount
 metadata:
   name: unittest-crowd
   labels:
-    helm.sh/chart: crowd-1.7.1
+    helm.sh/chart: crowd-1.16.6
     app.kubernetes.io/name: crowd
     app.kubernetes.io/instance: unittest-crowd
-    app.kubernetes.io/version: "5.0.3"
+    app.kubernetes.io/version: "5.2.1"
     app.kubernetes.io/managed-by: Helm
 ---
 # Source: crowd/templates/config-jvm.yaml
@@ -17,19 +17,69 @@ kind: ConfigMap
 metadata:
   name: unittest-crowd-jvm-config
   labels:
-    helm.sh/chart: crowd-1.7.1
+    helm.sh/chart: crowd-1.16.6
     app.kubernetes.io/name: crowd
     app.kubernetes.io/instance: unittest-crowd
-    app.kubernetes.io/version: "5.0.3"
+    app.kubernetes.io/version: "5.2.1"
     app.kubernetes.io/managed-by: Helm
 data:
   additional_jvm_args: >-
-    -Dcrowd.cluster.hazelcast.listenPort=5701
-    -Dcrowd.clusterNodeName.useHostname=true
+    -Dcluster.node.name=${KUBE_POD_NAME}
     -Datlassian.logging.cloud.enabled=false
     -XX:ActiveProcessorCount=2
+    -javaagent:/var/atlassian/application-data/crowd/shared/jmx_prometheus_javaagent.jar=9999:/opt/atlassian/jmx/jmx-config.yaml
   max_heap: 768m
   min_heap: 384m
+---
+# Source: crowd/templates/configmap-jmx-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: unittest-crowd-jmx-config
+  labels:
+    helm.sh/chart: crowd-1.16.6
+    app.kubernetes.io/name: crowd
+    app.kubernetes.io/instance: unittest-crowd
+    app.kubernetes.io/version: "5.2.1"
+    app.kubernetes.io/managed-by: Helm
+data:
+  jmx-config.yaml: |
+    rules:
+      - pattern: '(java.lang)<type=(\w+)><>(\w+):'
+        name: java_lang_$2_$3
+        labels:
+          product: "crowd"
+      - pattern: 'java.lang<type=Memory><HeapMemoryUsage>(\w+)'
+        name: java_lang_Memory_HeapMemoryUsage_$1
+        labels:
+          product: "crowd"
+      - pattern: 'java.lang<name=G1 (\w+) Generation, type=GarbageCollector><>(\w+)'
+        name: java_lang_G1_$1_Generation_$2
+        labels:
+          product: "crowd"
+      - pattern: '.*'
+---
+# Source: crowd/templates/service-jmx.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: unittest-crowd-jmx
+  labels:
+    helm.sh/chart: crowd-1.16.6
+    app.kubernetes.io/name: crowd
+    app.kubernetes.io/instance: unittest-crowd
+    app.kubernetes.io/version: "5.2.1"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9999
+      targetPort: jmx
+      name: jmx
+  selector:
+    app.kubernetes.io/name: crowd
+    app.kubernetes.io/instance: unittest-crowd
 ---
 # Source: crowd/templates/service.yaml
 apiVersion: v1
@@ -37,23 +87,20 @@ kind: Service
 metadata:
   name: unittest-crowd
   labels:
-    helm.sh/chart: crowd-1.7.1
+    helm.sh/chart: crowd-1.16.6
     app.kubernetes.io/name: crowd
     app.kubernetes.io/instance: unittest-crowd
-    app.kubernetes.io/version: "5.0.3"
+    app.kubernetes.io/version: "5.2.1"
     app.kubernetes.io/managed-by: Helm
   annotations:
 spec:
   type: ClusterIP
+  sessionAffinity: None
   ports:
     - port: 80
       targetPort: http
       protocol: TCP
       name: http
-    - port: 5701
-      targetPort: hazelcast
-      protocol: TCP
-      name: hazelcast
   selector:
     app.kubernetes.io/name: crowd
     app.kubernetes.io/instance: unittest-crowd
@@ -64,10 +111,10 @@ kind: StatefulSet
 metadata:
   name: unittest-crowd
   labels:
-    helm.sh/chart: crowd-1.7.1
+    helm.sh/chart: crowd-1.16.6
     app.kubernetes.io/name: crowd
     app.kubernetes.io/instance: unittest-crowd
-    app.kubernetes.io/version: "5.0.3"
+    app.kubernetes.io/version: "5.2.1"
     app.kubernetes.io/managed-by: Helm
 spec:
   replicas: 1
@@ -79,12 +126,18 @@ spec:
   template:
     metadata:
       annotations:
+        checksum/config-jvm: d843eab28df462a0c0b8388035077abc297a3f2d378a67e7f2f1190348f43d32
       labels:
         app.kubernetes.io/name: crowd
         app.kubernetes.io/instance: unittest-crowd
     spec:
       serviceAccountName: unittest-crowd
       terminationGracePeriodSeconds: 30
+      hostAliases:
+        - hostnames:
+          - foo.local
+          - bar.local
+          ip: 127.0.0.1
       securityContext:
         fsGroup: 2004
       initContainers:
@@ -97,24 +150,34 @@ spec:
             - name: shared-home
               mountPath: "/shared-home"
           command: ["sh", "-c", "(chgrp 2004 /shared-home; chmod g+w /shared-home)"]
+        - name: fetch-jmx-exporter
+          image: bitnami/jmx-exporter:0.18.0
+          command: ["cp"]
+          args: ["/opt/bitnami/jmx-exporter/jmx_prometheus_javaagent.jar", "/var/atlassian/application-data/crowd/shared"]
+          securityContext:
+            runAsUser: 0
+          volumeMounts:
+            - mountPath: "/var/atlassian/application-data/crowd/shared"
+              name: shared-home
       containers:
         - name: crowd
-          image: "atlassian/crowd:4.2.2"
+          image: "atlassian/crowd:5.2.1"
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
               containerPort: 8095
               protocol: TCP
-            - name: hazelcast
-              containerPort: 5701
+            - name: jmx
+              containerPort: 9999
               protocol: TCP
           readinessProbe:
             httpGet:
               port: 8095
-              path: /
+              path: /crowd/status
             initialDelaySeconds: 10
             periodSeconds: 5
-            failureThreshold: 30
+            timeoutSeconds: 1
+            failureThreshold: 10
           resources:
             requests:
               cpu: "2"
@@ -123,11 +186,17 @@ spec:
             - name: local-home
               mountPath: "/var/atlassian/application-data/crowd"
             - name: local-home
-              mountPath: "/opt/atlassian/crowd/logs"
+              mountPath: "/opt/atlassian/crowd/apache-tomcat/logs"
               subPath: "logs"
             - name: shared-home
               mountPath: "/var/atlassian/application-data/crowd/shared"
+            - name: jmx-config
+              mountPath: /opt/atlassian/jmx
           env:
+            - name: KUBE_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
             - name: ATL_TOMCAT_SCHEME
               value: "https"
             - name: ATL_TOMCAT_SECURE
@@ -161,11 +230,15 @@ spec:
             preStop:
               exec:
                 command: ["sh", "-c", "/shutdown-wait.sh"]
+      priorityClassName: high
       volumes:
         - name: local-home
           emptyDir: {}
         - name: shared-home
           emptyDir: {}
+        - name: jmx-config
+          configMap:
+            name: unittest-crowd-jmx-config
 ---
 # Source: crowd/templates/tests/test-application-status.yaml
 apiVersion: v1
@@ -176,10 +249,10 @@ metadata:
     "helm.sh/hook": test
     "helm.sh/hook-delete-policy": "before-hook-creation,hook-succeeded"
   labels:
-    helm.sh/chart: crowd-1.7.1
+    helm.sh/chart: crowd-1.16.6
     app.kubernetes.io/name: crowd
     app.kubernetes.io/instance: unittest-crowd
-    app.kubernetes.io/version: "5.0.3"
+    app.kubernetes.io/version: "5.2.1"
     app.kubernetes.io/managed-by: Helm
 spec:
   containers:
@@ -207,10 +280,10 @@ metadata:
     "helm.sh/hook": test
     "helm.sh/hook-delete-policy": "before-hook-creation,hook-succeeded"
   labels:
-    helm.sh/chart: crowd-1.7.1
+    helm.sh/chart: crowd-1.16.6
     app.kubernetes.io/name: crowd
     app.kubernetes.io/instance: unittest-crowd
-    app.kubernetes.io/version: "5.0.3"
+    app.kubernetes.io/version: "5.2.1"
     app.kubernetes.io/managed-by: Helm
 spec:
   containers:
@@ -237,42 +310,3 @@ spec:
     - name: shared-home
       emptyDir: {}
   restartPolicy: Never
----
-# Source: crowd/templates/nfs-permission-fixer.yaml
-apiVersion: batch/v1
-kind: Job
-metadata:
-  name: unittest-crowd-nfs-fixer
-  labels:
-    helm.sh/chart: crowd-1.7.1
-    app.kubernetes.io/name: crowd
-    app.kubernetes.io/instance: unittest-crowd
-    app.kubernetes.io/version: "5.0.3"
-    app.kubernetes.io/managed-by: Helm
-  annotations:
-    "helm.sh/hook": pre-install
-    "helm.sh/hook-delete-policy": "before-hook-creation,hook-succeeded"
-spec:
-  template:
-    metadata:
-      name: unittest-crowd-nfs-fixer
-      labels:
-        helm.sh/chart: crowd-1.7.1
-        app.kubernetes.io/name: crowd
-        app.kubernetes.io/instance: unittest-crowd
-        app.kubernetes.io/version: "5.0.3"
-        app.kubernetes.io/managed-by: Helm
-    spec:
-      restartPolicy: Never
-      containers:
-        - name: nfs-fixer
-          image: alpine
-          securityContext:
-            runAsUser: 0 # make sure we run as root so we get the ability to change the volume permissions
-          volumeMounts:
-            - name: shared-home
-              mountPath: "/shared-home"
-          command: ["sh", "-c", "(chgrp 2004 /shared-home; chmod g+w /shared-home)"]
-      volumes:
-        - name: shared-home
-          emptyDir: {}

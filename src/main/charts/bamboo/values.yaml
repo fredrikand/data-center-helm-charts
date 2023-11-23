@@ -268,9 +268,21 @@ volumes:
       # -- Image repository for the permission fixer init container. Defaults to alpine
       #
       imageRepo: alpine
+
       # -- Image tag for the permission fixer init container. Defaults to latest
       #
       imageTag: latest
+
+      # -- Resources requests and limits for nfsPermissionFixer init container
+      # See: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+      #
+      resources: {}
+      #  requests:
+      #    cpu: "1m"
+      #    memory: "20Mi"
+      #  limits:
+      #    cpu: "1"
+      #    memory: "1G"
 
       # -- By default, the fixer will change the group ownership of the volume's root directory
       # to match the Bamboo container's GID (2001), and then ensures the directory is
@@ -354,8 +366,9 @@ ingress:
   #
   path:
 
-  # -- The custom annotations that should be applied to the Ingress Resource
-  # when NOT using the K8s ingress-nginx controller.
+  # -- The custom annotations that should be applied to the Ingress Resource.
+  # If using an ingress-nginx controller be sure that the annotations you add
+  # here are compatible with those already defined in the 'ingess.yaml' template
   #
   annotations: {}
 
@@ -379,6 +392,10 @@ ingress:
 # Bamboo configuration
 #
 bamboo:
+
+  # -- Whether the main container should acquire helm release name. By default the container name is `bamboo` which corresponds to the name of the Helm Chart.
+  #
+  useHelmReleaseNameAsContainerName: false
 
   # -- To skip the setup wizard post deployment set this property to 'true' and
   # ensure values for all 'REQUIRED' and 'UNATTENDED-SETUP' stanzas
@@ -489,13 +506,30 @@ bamboo:
   #
   service:
 
-    # -- The port on which the Bamboo K8s Service will listen
+    # -- The port on which the Bamboo K8s Service will listen for http traffic
     #
     port: 80
 
     # -- The type of K8s service to use for Bamboo
     #
     type: ClusterIP
+
+    # -- Session affinity type. If you want to make sure that connections from a particular client
+    # are passed to the same pod each time, set sessionAffinity to ClientIP.
+    # See: https://kubernetes.io/docs/reference/networking/virtual-ips/#session-affinity
+    #
+    sessionAffinity: None
+
+    # -- Session affinity configuration
+    #
+    sessionAffinityConfig:
+
+      clientIP:
+
+        # -- Specifies the seconds of ClientIP type session sticky time.
+        # The value must be > 0 && <= 86400 (for 1 day) if ServiceAffinity == "ClientIP". Default value is 10800 (for 3 hours).
+        #
+        timeoutSeconds:
 
     # -- Use specific loadBalancerIP. Only applies to service type LoadBalancer.
     #
@@ -507,6 +541,30 @@ bamboo:
     contextPath:
 
     # -- Additional annotations to apply to the Service
+    #
+    annotations: {}
+
+  # K8s Service configuration for JMS
+  #
+  jmsService:
+
+    # -- Whether to create a separate Service for JMS Agent traffic
+    #
+    enabled: false
+
+    # -- The port on which the Bamboo K8s Service will listen for Agent traffic
+    #
+    port: 54663
+
+    # -- The type of K8s service to use for JMS
+    #
+    type: ClusterIP
+
+    # -- Use specific loadBalancerIP. Only applies to service type LoadBalancer.
+    #
+    loadBalancerIP:
+
+    # -- Additional annotations to apply to the JMS Service
     #
     annotations: {}
 
@@ -554,6 +612,10 @@ bamboo:
   #
   readinessProbe:
 
+    # -- Whether to apply the readinessProbe check to pod.
+    #
+    enabled: true
+
     # -- The initial delay (in seconds) for the Bamboo container readiness probe,
     # after which the probe will start running.
     #
@@ -563,10 +625,70 @@ bamboo:
     #
     periodSeconds: 10
 
+    # -- Number of seconds after which the probe times out
+    #
+    timeoutSeconds: 1
+
     # -- The number of consecutive failures of the Bamboo container readiness probe
     # before the pod fails readiness checks.
     #
     failureThreshold: 30
+
+    # -- Custom ReadinessProbe to override the default /status httpGet
+    #
+    customProbe: {}
+#      tcpSocket:
+#        port: 8080
+#      periodSeconds: 5
+#      failureThreshold: 120
+
+  # Confirm that Bamboo is up and running with a StartupProbe
+  # https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-startup-probes
+  #
+  startupProbe:
+
+    # -- Whether to apply the startupProbe check to pod.
+    #
+    enabled: false
+
+    # -- Time to wait before starting the first probe
+    #
+    initialDelaySeconds: 60
+
+    # -- How often (in seconds) the Bamboo container startup probe will run
+    #
+    periodSeconds: 5
+
+    # -- The number of consecutive failures of the Bamboo container startup probe
+    # before the pod fails startup checks.
+    #
+    failureThreshold: 120
+
+  # Ensure that the server responds with a LivenessProbe
+  # https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-a-tcp-liveness-probe
+  #
+  livenessProbe:
+
+    # -- Whether to apply the livenessProbe check to pod.
+    #
+    enabled: false
+
+    # -- Time to wait before starting the first probe
+    #
+    initialDelaySeconds: 60
+
+    # -- How often (in seconds) the Bamboo container liveness probe will run
+    #
+    periodSeconds: 5
+
+    # -- Number of seconds after which the probe times out
+    #
+    timeoutSeconds: 1
+
+    # -- The number of consecutive failures of the Bamboo container liveness probe
+    # before the pod fails liveness checks.
+    #
+    failureThreshold: 12
 
   # Bamboo log configuration
   #
@@ -720,6 +842,110 @@ bamboo:
   #   labelSelector:
   #     matchLabels:
 
+  # -- Certificates to be added to Java truststore. Provide reference to a secret that contains the certificates
+  #
+  additionalCertificates:
+    secretName:
+    customCmd:
+
+# Monitoring
+#
+monitoring:
+
+  # -- Expose JMX metrics with jmx_exporter https://github.com/prometheus/jmx_exporter
+  #
+  exposeJmxMetrics: false
+
+  # --  JMX exporter init container configuration
+  #
+  jmxExporterInitContainer:
+
+    # -- Whether to run JMX exporter init container as root to copy JMX exporter binary to shared home volume.
+    # Set to false if running containers as root is not allowed in the cluster.
+    #
+    runAsRoot: true
+
+    # -- Custom SecurityContext for the jmx exporter init container
+    #
+    customSecurityContext: {}
+
+    # -- Resources requests and limits for the JMX exporter init container
+    # See: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+    #
+    resources: {}
+    #  requests:
+    #    cpu: "1m"
+    #    memory: "20Mi"
+    #  limits:
+    #    cpu: "1"
+    #    memory: "1G"
+
+  # -- Annotations added to the jmx service
+  #
+  jmxServiceAnnotations: {}
+
+  # -- Fetch jmx_exporter jar from the image. If set to false make sure to manually copy the jar
+  # to shared home and provide an absolute path in jmxExporterCustomJarLocation
+  #
+  fetchJmxExporterJar: true
+
+  # -- Image repository with jmx_exporter jar
+  #
+  jmxExporterImageRepo: bitnami/jmx-exporter
+
+  # -- Image tag to be used to pull jmxExporterImageRepo
+  #
+  jmxExporterImageTag: 0.18.0
+
+  # -- Port number on which metrics will be available
+  #
+  jmxExporterPort: 9999
+
+  # -- JMX exporter port type
+  #
+  jmxExporterPortType: ClusterIP
+
+  # -- Location of jmx_exporter jar file if mounted from a secret or manually copied to shared home
+  #
+  jmxExporterCustomJarLocation:
+
+  # -- Custom JMX config with the rules
+  #
+  jmxExporterCustomConfig: {}
+  #  rules:
+  #   - pattern: ".*"
+
+  serviceMonitor:
+
+    # -- Create ServiceMonitor to start scraping metrics. ServiceMonitor CRD needs to be created in advance.
+    #
+    create: false
+
+    # -- ServiceMonitorSelector of the prometheus instance.
+    #
+    prometheusLabelSelector: {}
+      # release: prometheus
+
+    # -- Scrape interval for the JMX service.
+    #
+    scrapeIntervalSeconds: 30
+
+  grafana:
+
+    # -- Create ConfigMaps with Grafana dashboards
+    #
+    createDashboards: false
+
+    # -- Label selector for Grafana dashboard importer sidecar
+    #
+    dashboardLabels: {}
+    # grafana_dashboard: dc_monitoring
+
+    # -- Annotations added to Grafana dashboards ConfigMaps. See: https://github.com/kiwigrid/k8s-sidecar#usage
+    #
+    dashboardAnnotations: {}
+      # k8s-sidecar-target-directory: /tmp/dashboards/example-folder
+
 # Fluentd configuration
 #
 # Bamboo log collection and aggregation can be enabled using Fluentd. This config
@@ -735,9 +961,21 @@ fluentd:
   # -- The Fluentd sidecar image repository
   #
   imageRepo: fluent/fluentd-kubernetes-daemonset
+
   # -- The Fluentd sidecar image tag
   #
   imageTag: v1.11.5-debian-elasticsearch7-1.2
+
+  # -- Resources requests and limits for fluentd sidecar container
+  # See: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+  #
+  resources: {}
+  #  requests:
+  #    cpu: "1m"
+  #    memory: "20Mi"
+  #  limits:
+  #    cpu: "1"
+  #    memory: "1G"
 
   # -- The command used to start Fluentd. If not supplied the default command
   # will be used: "fluentd -c /fluentd/etc/fluent.conf -v"
@@ -832,6 +1070,11 @@ affinity: {}
 #
 schedulerName:
 
+# -- Priority class for the application pods. The PriorityClass with this name needs to be available in the cluster.
+# For details see https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/#priorityclass
+#
+priorityClassName:
+
 # -- Additional container definitions that will be added to all Bamboo pods
 #
 additionalContainers: []
@@ -871,3 +1114,31 @@ additionalFiles: []
 #    type: secret
 #    key: keystore.jks
 #    mountPath: /var/ssl
+
+# -- PodDisruptionBudget: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
+# You can specify only one of maxUnavailable and minAvailable in a single PodDisruptionBudget. When both minAvailable and maxUnavailable are set, maxUnavailable takes precedence.
+#
+podDisruptionBudget:
+  enabled: false
+  labels: {}
+  annotations: {}
+  minAvailable:
+  maxUnavailable:
+
+# -- Create additional ConfigMaps with given names, keys and content. Ther Helm release name will be used as a prefix
+# for a ConfigMap name, fileName is used as subPath
+#
+additionalConfigMaps: []
+#  - name: extra-configmap
+#    keys:
+#      - fileName: hello.properties
+#        mountPath: /opt/atlassian/jira/atlassian-jira/WEB-INF/classes
+#        defaultMode:
+#        content: |
+#          foo=bar
+#          hello=world
+#      - fileName: hello.xml
+#        mountPath: /opt/atlassian/jira/atlassian-jira/WEB-INF/classes
+#        content: |
+#          <xml>
+#          </xml>

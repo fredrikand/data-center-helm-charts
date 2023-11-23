@@ -110,6 +110,16 @@ Pod labels
 -Dconfluence.cluster.hazelcast.listenPort={{ .Values.confluence.ports.hazelcast }}
 {{- end }}
 
+{{- define "confluence.sysprop.s3Config" -}}
+{{- if and .Values.confluence.s3AttachmentsStorage.bucketName .Values.confluence.s3AttachmentsStorage.bucketRegion }}
+-Dconfluence.filestore.attachments.s3.bucket.name={{ .Values.confluence.s3AttachmentsStorage.bucketName }}
+-Dconfluence.filestore.attachments.s3.bucket.region={{ .Values.confluence.s3AttachmentsStorage.bucketRegion }}
+{{- if .Values.confluence.s3AttachmentsStorage.endpointOverride }}
+-Dconfluence.filestore.attachments.s3.endpoint.override={{ .Values.confluence.s3AttachmentsStorage.endpointOverride }}
+{{- end }}
+{{- end }}
+{{- end }}
+
 {{- define "confluence.sysprop.clusterNodeName" -}}
 -Dconfluence.clusterNodeName.useHostname={{ .Values.confluence.clustering.usePodNameAsClusterNodeName }}
 {{- end }}
@@ -150,7 +160,7 @@ Create default value for ingress path
 {{/*
 The command that should be run by the nfs-fixer init container to correct the permissions of the shared-home root directory.
 */}}
-{{- define "sharedHome.permissionFix.command" -}}
+{{- define "confluence.sharedHome.permissionFix.command" -}}
 {{- $securityContext := .Values.confluence.securityContext }}
 {{- with .Values.volumes.sharedHome.nfsPermissionFixer }}
     {{- if .command }}
@@ -202,6 +212,22 @@ on Tomcat's logs directory. THis ensures that Tomcat+Confluence logs get capture
   {{- if .Values.volumes.sharedHome.subPath }}
   subPath: {{ .Values.volumes.sharedHome.subPath | quote }}
   {{- end }}
+{{- if .Values.confluence.tomcatConfig.generateByHelm }}
+- name: server-xml
+  mountPath: /opt/atlassian/confluence/conf/server.xml
+  subPath: server.xml
+- name: temp
+  mountPath: /opt/atlassian/confluence/temp
+{{- end }}
+{{- if .Values.confluence.seraphConfig.generateByHelm }}
+- name: seraph-config-xml
+  mountPath: /opt/atlassian/confluence/confluence/WEB-INF/classes/seraph-config.xml
+  subPath: seraph-config.xml
+{{- end }}
+{{- if .Values.confluence.additionalCertificates.secretName }}
+- name: keystore
+  mountPath: /var/ssl
+{{- end }}
 {{ end }}
 
 {{/*
@@ -210,6 +236,10 @@ Defines the volume mounts used by the Synchrony container.
 {{ define "synchrony.volumeMounts" }}
 - name: synchrony-home
   mountPath: {{ .Values.volumes.synchronyHome.mountPath | quote }}
+{{- if .Values.synchrony.additionalCertificates.secretName }}
+- name: keystore
+  mountPath: /var/ssl
+{{- end }}
 {{ end }}
 
 {{/*
@@ -246,8 +276,8 @@ For each additional Synchrony library declared, generate a volume mount that inj
 Define pod annotations here to allow template overrides when used as a sub chart
 */}}
 {{- define "confluence.podAnnotations" -}}
-{{- with .Values.podAnnotations }}
-{{- toYaml . }}
+{{- range $key, $value := .Values.podAnnotations }}
+{{ $key }}: {{ tpl $value $ | quote }}
 {{- end }}
 {{- end }}
 
@@ -355,6 +385,31 @@ For each additional plugin declared, generate a volume mount that injects that l
 {{- with .Values.volumes.additional }}
 {{- toYaml . | nindent 0 }}
 {{- end }}
+{{- if .Values.confluence.tomcatConfig.generateByHelm }}
+- name: server-xml
+  configMap:
+    name: {{ include "common.names.fullname" . }}-server-config
+    items:
+      - key: server.xml
+        path: server.xml
+- name: temp
+  emptyDir: {}
+{{- end }}
+{{- if .Values.confluence.seraphConfig.generateByHelm }}
+- name: seraph-config-xml
+  configMap:
+    name: {{ include "common.names.fullname" . }}-server-config
+    items:
+      - key: seraph-config.xml
+        path: seraph-config.xml
+{{- end }}
+{{- if .Values.confluence.additionalCertificates.secretName }}
+- name: keystore
+  emptyDir: {}
+- name: certs
+  secret:
+    secretName: {{ .Values.confluence.additionalCertificates.secretName }}
+{{- end }}
 {{- end }}
 
 {{- define "synchrony.volumes" -}}
@@ -364,6 +419,13 @@ For each additional plugin declared, generate a volume mount that injects that l
 {{ include "confluence.volumes.sharedHome" . }}
 {{- with .Values.volumes.additionalSynchrony }}
 {{- toYaml . | nindent 0 }}
+{{- end }}
+{{- if .Values.synchrony.additionalCertificates.secretName }}
+- name: keystore
+  emptyDir: {}
+- name: certs
+  secret:
+    secretName: {{ .Values.synchrony.additionalCertificates.secretName }}
 {{- end }}
 {{- end }}
 
@@ -537,3 +599,19 @@ volumeClaimTemplates:
     {{- . }}
     {{- end }}
 {{- end}}
+
+{{- define "confluence.addCrtToKeystoreCmd" }}
+{{- if .Values.confluence.additionalCertificates.customCmd}}
+{{ .Values.confluence.additionalCertificates.customCmd}}
+{{- else }}
+set -e; cp $JAVA_HOME/lib/security/cacerts /var/ssl/cacerts; for crt in /tmp/crt/*.*; do echo "Adding $crt to keystore"; keytool -import -keystore /var/ssl/cacerts -storepass changeit -noprompt -alias $(echo $(basename $crt)) -file $crt; done;
+{{- end }}
+{{- end }}
+
+{{- define "synchrony.addCrtToKeystoreCmd" }}
+{{- if .Values.synchrony.additionalCertificates.customCmd}}
+{{ .Values.synchrony.additionalCertificates.customCmd}}
+{{- else }}
+set -e; cp $JAVA_HOME/lib/security/cacerts /var/ssl/cacerts; for crt in /tmp/crt/*.*; do echo "Adding $crt to keystore"; keytool -import -keystore /var/ssl/cacerts -storepass changeit -noprompt -alias $(echo $(basename $crt)) -file $crt; done;
+{{- end }}
+{{- end }}

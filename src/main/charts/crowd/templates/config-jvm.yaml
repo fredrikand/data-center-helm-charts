@@ -6,12 +6,15 @@ metadata:
     {{- include "common.labels.commonLabels" . | nindent 4 }}
 data:
   additional_jvm_args: >-
-    {{ include "crowd.sysprop.hazelcastListenPort" . }}
     {{ include "crowd.sysprop.clusterNodeName" . }}
     {{ include "crowd.sysprop.fluentdAppender" . }}
     {{- range .Values.crowd.additionalJvmArgs }}
     {{ . }}
     {{- end }}
     -XX:ActiveProcessorCount={{ include "flooredCPU" .Values.crowd.resources.container.requests.cpu }}
+    {{- if .Values.crowd.additionalCertificates.secretName }}
+    -Djavax.net.ssl.trustStore=/var/ssl/cacerts
+    {{- end }}
+    {{ include "common.jmx.javaagent" . | indent 4 | trim }}
   max_heap: {{ .Values.crowd.resources.jvm.maxHeap }}
   min_heap: {{ .Values.crowd.resources.jvm.minHeap }}

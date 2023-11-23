@@ -1,5 +1,231 @@
 # Change Log
 
+## 1.16.6
+
+**Release date:** 2023-10-30
+
+![AppVersion: 9.4.0](https://img.shields.io/static/v1?label=AppVersion&message=9.4.0&color=success&logo=)
+![Kubernetes: >=1.21.x-0](https://img.shields.io/static/v1?label=Kubernetes&message=>=1.21.x-0&color=informational&logo=kubernetes)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+* JMX container resources (#707)
+
+## 1.16.5
+
+**Release date:** 2023-10-24
+
+![AppVersion: 9.3.4](https://img.shields.io/static/v1?label=AppVersion&message=9.3.4&color=success&logo=)
+![Kubernetes: >=1.21.x-0](https://img.shields.io/static/v1?label=Kubernetes&message=>=1.21.x-0&color=informational&logo=kubernetes)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+* Update appVersions for DC apps (#697)
+
+## 1.16.4
+
+**Release date:** 2023-10-11
+
+![AppVersion: 9.3.3](https://img.shields.io/static/v1?label=AppVersion&message=9.3.3&color=success&logo=)
+![Kubernetes: >=1.21.x-0](https://img.shields.io/static/v1?label=Kubernetes&message=>=1.21.x-0&color=informational&logo=kubernetes)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+* Update Helm chart version
+
+## 1.16.3
+
+**Release date:** 2023-10-11
+
+![AppVersion: 9.3.3](https://img.shields.io/static/v1?label=AppVersion&message=9.3.3&color=success&logo=)
+![Kubernetes: >=1.21.x-0](https://img.shields.io/static/v1?label=Kubernetes&message=>=1.21.x-0&color=informational&logo=kubernetes)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+* Update Helm chart version
+
+## 1.16.2
+
+**Release date:** 2023-10-8
+
+![AppVersion: 9.3.3](https://img.shields.io/static/v1?label=AppVersion&message=9.3.3&color=success&logo=)
+![Kubernetes: >=1.21.x-0](https://img.shields.io/static/v1?label=Kubernetes&message=>=1.21.x-0&color=informational&logo=kubernetes)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+* Add quote to podAnnotation templating (#678)
+
+## 1.16.1
+
+**Release date:** 2023-9-20
+
+![AppVersion: 9.3.3](https://img.shields.io/static/v1?label=AppVersion&message=9.3.3&color=success&logo=)
+![Kubernetes: >=1.21.x-0](https://img.shields.io/static/v1?label=Kubernetes&message=>=1.21.x-0&color=informational&logo=kubernetes)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+* Update Helm chart version
+
+## 1.16.0
+
+**Release date:** 2023-9-18
+
+![AppVersion: 9.3.3](https://img.shields.io/static/v1?label=AppVersion&message=9.3.3&color=success&logo=)
+![Kubernetes: >=1.21.x-0](https://img.shields.io/static/v1?label=Kubernetes&message=>=1.21.x-0&color=informational&logo=kubernetes)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+* Allow templating of pod annotations (#662)
+* Make securityContext configurable for jmx exporter init container (#670)
+
+## 1.15.3
+
+**Release date:** 2023-8-28
+
+![AppVersion: 9.3.2](https://img.shields.io/static/v1?label=AppVersion&message=9.3.2&color=success&logo=)
+![Kubernetes: >=1.21.x-0](https://img.shields.io/static/v1?label=Kubernetes&message=>=1.21.x-0&color=informational&logo=kubernetes)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+* Update Helm chart version
+
+## 1.15.2
+
+**Release date:** 2023-8-22
+
+![AppVersion: 9.3.2](https://img.shields.io/static/v1?label=AppVersion&message=9.3.2&color=success&logo=)
+![Kubernetes: >=1.21.x-0](https://img.shields.io/static/v1?label=Kubernetes&message=>=1.21.x-0&color=informational&logo=kubernetes)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+* Update Helm chart version
+
+## 1.15.1
+
+**Release date:** 2023-8-17
+
+![AppVersion: 9.3.2](https://img.shields.io/static/v1?label=AppVersion&message=9.3.2&color=success&logo=)
+![Kubernetes: >=1.21.x-0](https://img.shields.io/static/v1?label=Kubernetes&message=>=1.21.x-0&color=informational&logo=kubernetes)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+* Update appVersions for DC apps (#643)
+
+## 1.15.0
+
+**Release date:** 2023-8-7
+
+![AppVersion: 9.3.1](https://img.shields.io/static/v1?label=AppVersion&message=9.3.1&color=success&logo=)
+![Kubernetes: >=1.21.x-0](https://img.shields.io/static/v1?label=Kubernetes&message=>=1.21.x-0&color=informational&logo=kubernetes)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+* Update Helm chart version
+
+## 1.14.1
+
+**Release date:** 2023-7-26
+
+![AppVersion: 9.3.1](https://img.shields.io/static/v1?label=AppVersion&message=9.3.1&color=success&logo=)
+![Kubernetes: >=1.21.x-0](https://img.shields.io/static/v1?label=Kubernetes&message=>=1.21.x-0&color=informational&logo=kubernetes)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+* Update Helm chart version
+
+## 1.14.0
+
+**Release date:** 2023-7-25
+
+![AppVersion: 9.3.1](https://img.shields.io/static/v1?label=AppVersion&message=9.3.1&color=success&logo=)
+![Kubernetes: >=1.21.x-0](https://img.shields.io/static/v1?label=Kubernetes&message=>=1.21.x-0&color=informational&logo=kubernetes)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+* Add liveness probes, make readinessProbes configurable (#626)
+* Add additionalFiles to bamboo-agent Helm chart (#625)
+* Add additionalVolumes and additionalVolumeMounts to bamboo-agent (#619)
+
+## 1.13.1
+
+**Release date:** 2023-6-28
+
+![AppVersion: 9.3.0](https://img.shields.io/static/v1?label=AppVersion&message=9.3.0&color=success&logo=)
+![Kubernetes: >=1.21.x-0](https://img.shields.io/static/v1?label=Kubernetes&message=>=1.21.x-0&color=informational&logo=kubernetes)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+* Run jmx init container as root: get fix from common chart ver 1.2.3 (#608)
+
+## 1.13.0
+
+**Release date:** 2023-6-13
+
+![AppVersion: 9.3.0](https://img.shields.io/static/v1?label=AppVersion&message=9.3.0&color=success&logo=)
+![Kubernetes: >=1.21.x-0](https://img.shields.io/static/v1?label=Kubernetes&message=>=1.21.x-0&color=informational&logo=kubernetes)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+* Update appVersions for DC apps (#599)
+* Bamboo dashboard (#588)
+* Expose JMX beans on http endpoint (#562)
+
+## 1.12.0
+
+**Release date:** 2023-4-18
+
+![AppVersion: 9.2.1](https://img.shields.io/static/v1?label=AppVersion&message=9.2.1&color=success&logo=)
+![Kubernetes: >=1.21.x-0](https://img.shields.io/static/v1?label=Kubernetes&message=>=1.21.x-0&color=informational&logo=kubernetes)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+* Add priorityClassName to pod spec (#557)
+* Add hostAliases for all DC products (#556)
+
+## 1.11.0
+
+**Release date:** 2023-3-22
+
+![AppVersion: 9.2.1](https://img.shields.io/static/v1?label=AppVersion&message=9.2.1&color=success&logo=)
+![Kubernetes: >=1.21.x-0](https://img.shields.io/static/v1?label=Kubernetes&message=>=1.21.x-0&color=informational&logo=kubernetes)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+* Update appVersions for DC apps (#531)
+
+## 1.10.0
+
+**Release date:** 2023-2-20
+
+![AppVersion: 9.2.1](https://img.shields.io/static/v1?label=AppVersion&message=9.2.1&color=success&logo=)
+![Kubernetes: >=1.21.x-0](https://img.shields.io/static/v1?label=Kubernetes&message=>=1.21.x-0&color=informational&logo=kubernetes)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+* Add Bitbucket Mesh to Bitbucket Helm chart (#501)
+
+## 1.9.1
+
+**Release date:** 2023-2-16
+
+![AppVersion: 9.2.1](https://img.shields.io/static/v1?label=AppVersion&message=9.2.1&color=success&logo=)
+![Kubernetes: >=1.21.x-0](https://img.shields.io/static/v1?label=Kubernetes&message=>=1.21.x-0&color=informational&logo=kubernetes)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+* Fix artifact hub annotation yaml
+
+## 1.9.0
+
+**Release date:** 2023-2-15
+
+![AppVersion: 9.2.1](https://img.shields.io/static/v1?label=AppVersion&message=9.2.1&color=success&logo=)
+![Kubernetes: >=1.21.x-0](https://img.shields.io/static/v1?label=Kubernetes&message=>=1.21.x-0&color=informational&logo=kubernetes)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+
+## 1.8.1
+
+**Release date:** 2022-12-12
+
+![AppVersion: 9.0.1](https://img.shields.io/static/v1?label=AppVersion&message=9.0.1&color=success&logo=)
+![Kubernetes: >=1.21.x-0](https://img.shields.io/static/v1?label=Kubernetes&message=>=1.21.x-0&color=informational&logo=kubernetes)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+* Fix artifacthub.io annotations
+
+## 1.8.0
+
+**Release date:** 2022-12-9
+
+![AppVersion: 9.0.1](https://img.shields.io/static/v1?label=AppVersion&message=9.0.1&color=success&logo=)
+![Kubernetes: >=1.21.x-0](https://img.shields.io/static/v1?label=Kubernetes&message=>=1.21.x-0&color=informational&logo=kubernetes)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+* CLIP-1644: Stop supporting 1.19-1.20 k8s (#486)
+* Update appVersion to 9.0.1
+
 ## 1.7.1
 
 **Release date:** 2022-10-26

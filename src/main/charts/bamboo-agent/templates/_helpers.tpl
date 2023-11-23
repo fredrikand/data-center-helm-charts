@@ -56,8 +56,8 @@ Pod labels
 Define pod annotations here to allow template overrides when used as a sub chart
 */}}
 {{- define "agent.podAnnotations" -}}
-{{- with .Values.podAnnotations }}
-{{- toYaml . }}
+{{- range $key, $value := .Values.podAnnotations }}
+{{ $key }}: {{ tpl $value $ | quote }}
 {{- end }}
 {{- end }}
 
@@ -93,6 +93,33 @@ Define additional environment variables here to allow template overrides when us
 */}}
 {{- define "agent.additionalEnvironmentVariables" -}}
 {{- with .Values.agent.additionalEnvironmentVariables }}
+{{- toYaml . }}
+{{- end }}
+{{- end }}
+
+{{/*
+Define additional hosts here to allow template overrides when used as a sub chart
+*/}}
+{{- define "agent.additionalHosts" -}}
+{{- with .Values.additionalHosts }}
+{{- toYaml . }}
+{{- end }}
+{{- end }}
+
+{{/*
+Define additional volumes here to allow template overrides when used as a sub chart
+*/}}
+{{- define "agent.additionalVolumes" -}}
+{{- with .Values.volumes.additional }}
+{{- toYaml . | nindent 0 }}
+{{- end }}
+{{- end }}
+
+{{/*
+Define additional volume mounts here to allow template overrides when used as a sub chart
+*/}}
+{{- define "agent.additionalVolumeMounts" -}}
+{{- with .Values.agent.additionalVolumeMounts }}
 {{- toYaml . }}
 {{- end }}
 {{- end }}

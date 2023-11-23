@@ -1,6 +1,256 @@
 # Change Log
 
 
+## 1.16.6
+
+**Release date:** 2023-10-30
+
+![AppVersion: 8.5.2](https://img.shields.io/static/v1?label=AppVersion&message=8.5.2&color=success&logo=)
+![Kubernetes: >=1.21.x-0](https://img.shields.io/static/v1?label=Kubernetes&message=>=1.21.x-0&color=informational&logo=kubernetes)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+* JMX container resources (#707)
+
+## 1.16.5
+
+**Release date:** 2023-10-24
+
+![AppVersion: 8.5.2](https://img.shields.io/static/v1?label=AppVersion&message=8.5.2&color=success&logo=)
+![Kubernetes: >=1.21.x-0](https://img.shields.io/static/v1?label=Kubernetes&message=>=1.21.x-0&color=informational&logo=kubernetes)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+* Fix custom jmx config (#699)
+* Copy cacerts first, then import certs (#696)
+* Fix config-jvm template to avoid wrong new line (#694)
+
+## 1.16.4
+
+**Release date:** 2023-10-11
+
+![AppVersion: 8.5.2](https://img.shields.io/static/v1?label=AppVersion&message=8.5.2&color=success&logo=)
+![Kubernetes: >=1.21.x-0](https://img.shields.io/static/v1?label=Kubernetes&message=>=1.21.x-0&color=informational&logo=kubernetes)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+* Fix hazelcast svc type (#689)
+
+## 1.16.3
+
+**Release date:** 2023-10-11
+
+![AppVersion: 8.5.2](https://img.shields.io/static/v1?label=AppVersion&message=8.5.2&color=success&logo=)
+![Kubernetes: >=1.21.x-0](https://img.shields.io/static/v1?label=Kubernetes&message=>=1.21.x-0&color=informational&logo=kubernetes)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+* Make it possible to create a dedicated hazelcast svc (#686)
+
+## 1.16.2
+
+**Release date:** 2023-10-8
+
+![AppVersion: 8.5.2](https://img.shields.io/static/v1?label=AppVersion&message=8.5.2&color=success&logo=)
+![Kubernetes: >=1.21.x-0](https://img.shields.io/static/v1?label=Kubernetes&message=>=1.21.x-0&color=informational&logo=kubernetes)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+* Update appVersions for DC apps (#683)
+* Add quote to podAnnotation templating (#678)
+
+## 1.16.1
+
+**Release date:** 2023-9-20
+
+![AppVersion: 8.5.1](https://img.shields.io/static/v1?label=AppVersion&message=8.5.1&color=success&logo=)
+![Kubernetes: >=1.21.x-0](https://img.shields.io/static/v1?label=Kubernetes&message=>=1.21.x-0&color=informational&logo=kubernetes)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+* Update Helm chart version
+
+## 1.16.0
+
+**Release date:** 2023-9-18
+
+![AppVersion: 8.5.1](https://img.shields.io/static/v1?label=AppVersion&message=8.5.1&color=success&logo=)
+![Kubernetes: >=1.21.x-0](https://img.shields.io/static/v1?label=Kubernetes&message=>=1.21.x-0&color=informational&logo=kubernetes)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+* Allow templating of pod annotations (#662)
+* Make securityContext configurable for jmx exporter init container (#670)
+* Add user provided certificates to the default Java truststore (#663)
+
+## 1.15.3
+
+**Release date:** 2023-8-28
+
+![AppVersion: 8.5.0](https://img.shields.io/static/v1?label=AppVersion&message=8.5.0&color=success&logo=)
+![Kubernetes: >=1.21.x-0](https://img.shields.io/static/v1?label=Kubernetes&message=>=1.21.x-0&color=informational&logo=kubernetes)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+* Decouple server and jmx annotations (#654)
+* Update appVersions for DC apps (#655)
+* Disable startup probes by default (#653)
+
+## 1.15.2
+
+**Release date:** 2023-8-22
+
+![AppVersion: 7.19.12](https://img.shields.io/static/v1?label=AppVersion&message=7.19.12&color=success&logo=)
+![Kubernetes: >=1.21.x-0](https://img.shields.io/static/v1?label=Kubernetes&message=>=1.21.x-0&color=informational&logo=kubernetes)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+* Allow small cpu requests for Synchrony container (#650)
+* Add defaultMode to additionalConfigMaps (#647)
+
+## 1.15.1
+
+**Release date:** 2023-8-17
+
+![AppVersion: 7.19.12](https://img.shields.io/static/v1?label=AppVersion&message=7.19.12&color=success&logo=)
+![Kubernetes: >=1.21.x-0](https://img.shields.io/static/v1?label=Kubernetes&message=>=1.21.x-0&color=informational&logo=kubernetes)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+* Make startup probes optional (#646)
+
+## 1.15.0
+
+**Release date:** 2023-8-7
+
+![AppVersion: 7.19.12](https://img.shields.io/static/v1?label=AppVersion&message=7.19.12&color=success&logo=)
+![Kubernetes: >=1.21.x-0](https://img.shields.io/static/v1?label=Kubernetes&message=>=1.21.x-0&color=informational&logo=kubernetes)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+* Add PodDisruptionBudget to Atlassian DC Helm Charts (#636)
+* Add annotations to Grafana dashboards ConfigMaps (#637)
+* Add additional ConfigMaps to Helm Charts (#635)
+* Update appVersions for DC apps (#638)
+
+## 1.14.1
+
+**Release date:** 2023-7-26
+
+![AppVersion: 7.19.11](https://img.shields.io/static/v1?label=AppVersion&message=7.19.11&color=success&logo=)
+![Kubernetes: >=1.21.x-0](https://img.shields.io/static/v1?label=Kubernetes&message=>=1.21.x-0&color=informational&logo=kubernetes)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+* Disable liveness probes by default, make timeoutSeconds configurable (#630)
+
+## 1.14.0
+
+**Release date:** 2023-7-25
+
+![AppVersion: 7.19.11](https://img.shields.io/static/v1?label=AppVersion&message=7.19.11&color=success&logo=)
+![Kubernetes: >=1.21.x-0](https://img.shields.io/static/v1?label=Kubernetes&message=>=1.21.x-0&color=informational&logo=kubernetes)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+* Add liveness probes, make readinessProbes configurable (#626)
+* Support running Jira and Confluence containers as non root (incl running in OpenShift) (#623)
+* make sharedHome.permissionFix.command helper to be per-product (#622)
+* Unset default limits for Confluence (#616)
+* Synchrony missing container limits (#615)
+
+## 1.13.1
+
+**Release date:** 2023-6-28
+
+![AppVersion: 7.19.10](https://img.shields.io/static/v1?label=AppVersion&message=7.19.10&color=success&logo=)
+![Kubernetes: >=1.21.x-0](https://img.shields.io/static/v1?label=Kubernetes&message=>=1.21.x-0&color=informational&logo=kubernetes)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+* Run jmx init container as root: get fix from common chart ver 1.2.3 (#608)
+* Swap ingress paths for priority based rules (#602)
+
+## 1.13.0
+
+**Release date:** 2023-6-13
+
+![AppVersion: 7.19.9](https://img.shields.io/static/v1?label=AppVersion&message=7.19.9&color=success&logo=)
+![Kubernetes: >=1.21.x-0](https://img.shields.io/static/v1?label=Kubernetes&message=>=1.21.x-0&color=informational&logo=kubernetes)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+* Update appVersions for DC apps (#599)
+* Bamboo dashboard (#588)
+* Make sessionAffinity configurable in service spec (#582)
+* Cleanup dashboards
+* Add Confluence Grafana dashboards (#575)
+* Add optional ServiceMonitors to DC Helm Charts (#573)
+* Expose JMX beans on http endpoint (#562)
+
+## 1.12.0
+
+**Release date:** 2023-4-18
+
+![AppVersion: 7.19.7](https://img.shields.io/static/v1?label=AppVersion&message=7.19.7&color=success&logo=)
+![Kubernetes: >=1.21.x-0](https://img.shields.io/static/v1?label=Kubernetes&message=>=1.21.x-0&color=informational&logo=kubernetes)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+* Add priorityClassName to pod spec (#557)
+
+## 1.11.0
+
+**Release date:** 2023-3-22
+
+![AppVersion: 7.19.6](https://img.shields.io/static/v1?label=AppVersion&message=7.19.6&color=success&logo=)
+![Kubernetes: >=1.21.x-0](https://img.shields.io/static/v1?label=Kubernetes&message=>=1.21.x-0&color=informational&logo=kubernetes)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+* Update appVersions for DC apps (#531)
+
+## 1.10.0
+
+**Release date:** 2023-2-20
+
+![AppVersion: 7.19.5](https://img.shields.io/static/v1?label=AppVersion&message=7.19.5&color=success&logo=)
+![Kubernetes: >=1.21.x-0](https://img.shields.io/static/v1?label=Kubernetes&message=>=1.21.x-0&color=informational&logo=kubernetes)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+* Add Bitbucket Mesh to Bitbucket Helm chart (#501)
+
+## 1.9.1
+
+**Release date:** 2023-2-16
+
+![AppVersion: 7.19.5](https://img.shields.io/static/v1?label=AppVersion&message=7.19.5&color=success&logo=)
+![Kubernetes: >=1.21.x-0](https://img.shields.io/static/v1?label=Kubernetes&message=>=1.21.x-0&color=informational&logo=kubernetes)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+* CLIP-1767: Replica count for Synchrony; defaultMode made configurable in volumes (#509)
+* DCCLIP-270: Confluence S3 storage support (#493)
+* DCCLIP-322: Add S3 docs examples (#494)
+
+## 1.9.0
+
+**Release date:** 2023-2-15
+
+![AppVersion: 7.19.5](https://img.shields.io/static/v1?label=AppVersion&message=7.19.5&color=success&logo=)
+![Kubernetes: >=1.21.x-0](https://img.shields.io/static/v1?label=Kubernetes&message=>=1.21.x-0&color=informational&logo=kubernetes)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+* DCCLIP-270: Confluence S3 storage support (#493)
+* DCCLIP-322: Add S3 docs examples (#494)
+
+## 1.8.1
+
+**Release date:** 2022-12-12
+
+![AppVersion: 7.19.4](https://img.shields.io/static/v1?label=AppVersion&message=7.19.4&color=success&logo=)
+![Kubernetes: >=1.21.x-0](https://img.shields.io/static/v1?label=Kubernetes&message=>=1.21.x-0&color=informational&logo=kubernetes)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+* Fix artifacthub.io annotations
+
+## 1.8.0
+
+**Release date:** 2022-12-9
+
+![AppVersion: 7.19.4](https://img.shields.io/static/v1?label=AppVersion&message=7.19.4&color=success&logo=)
+![Kubernetes: >=1.21.x-0](https://img.shields.io/static/v1?label=Kubernetes&message=>=1.21.x-0&color=informational&logo=kubernetes)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+* CLIP-1644: Stop supporting 1.19-1.20 k8s (#486)
+* CLIP-1702: Create Role instead of ClusterRole for Hazelcast Kube client in Confluence and Bitbucket Helm charts (#470)
+* CLIP-1567: Make synchrony pod and service annotations configurable (#464)
+* Set `HAZELCAST_KUBERNETES_SERVICE_PORT` env var for Confluence and Synchrony #484
+* Use `ingress.https` flag to enable tls in ingress (#487)
+* Update appVersion to 7.19.4
+
 ## 1.7.1
 
 **Release date:** 2022-10-26
@@ -123,7 +373,7 @@
 * Added new feature additionalPorts (for jmx-monitoring) (#353)
 
 
-## 1.1.0 
+## 1.1.0
 
 **Release date:** 2021-11-03
 
@@ -132,15 +382,15 @@
 ![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
 
 
-* DCKUBE-721: Update version in Chart.yaml files 
-* DCKUBE-733: Update the product versions (#345) 
-* DCKUBE-739: Fix typos (#337) 
-* DCKUBE-739: Make securityContext changes backward compatible (#332) 
-* Roll Statefulset Pods if ConfigMap changes (#315) 
-* DCKUBE-677: Make security context more flexible (#321) 
-* DCKUBE-722: Enable configuring ingress.class name (#313) 
-* DCKUBE-678: Add schedulerName to StatefulSet (#301) 
-* DCKUBE-686: Decrease Confluence failover time (#299) 
+* DCKUBE-721: Update version in Chart.yaml files
+* DCKUBE-733: Update the product versions (#345)
+* DCKUBE-739: Fix typos (#337)
+* DCKUBE-739: Make securityContext changes backward compatible (#332)
+* Roll Statefulset Pods if ConfigMap changes (#315)
+* DCKUBE-677: Make security context more flexible (#321)
+* DCKUBE-722: Enable configuring ingress.class name (#313)
+* DCKUBE-678: Add schedulerName to StatefulSet (#301)
+* DCKUBE-686: Decrease Confluence failover time (#299)
 
 
 ## 1.0.0
@@ -218,9 +468,9 @@ This is the first officially supported version of the Helm chart.
 ![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
 
 
-* DCKUBE-437: Wording improvement for warning in NOTES when PV is not used (#199) 
-* DCKUBE-438: Increase the timeout for /bootstrap endpoints in the same way as for /setup to avoid the ingress timeout (#194) 
-* DCKUBE-392: Improve readability of Confluence values.yaml file (#183) 
+* DCKUBE-437: Wording improvement for warning in NOTES when PV is not used (#199)
+* DCKUBE-438: Increase the timeout for /bootstrap endpoints in the same way as for /setup to avoid the ingress timeout (#194)
+* DCKUBE-392: Improve readability of Confluence values.yaml file (#183)
 * Defining the following values in the helpers template for each chart, to allow template overrides: (#173)
 
 ### Default value changes
@@ -228,7 +478,7 @@ This is the first officially supported version of the Helm chart.
 There has been major improvement in the documentation for the keys in `values.yaml` file but there isn't any functional
 change.
 
-## 0.11.0 
+## 0.11.0
 
 **Release date:** 2021-06-09
 
@@ -237,13 +487,13 @@ change.
 ![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
 
 
-* DCKUBE-348: Warning of absent persistent volume (#169) 
-* DCKUBE-307: Do not print logs when testing helm installation. (#168) 
-* DCKUBE-308: Print service URL after installing helm chart (#157) 
-* DCKUBE-331: Mount additional libraries in DB connectivity pod. (#162) 
-* DCKUBE-282: Update icons to SVG (#164) 
-* DCKUBE-322: Revert previous enabling of Synchrony by default for now … (#160) 
-* DCKUBE-322: Add resources stanza for Synchrony and inject values into startup (#151) 
+* DCKUBE-348: Warning of absent persistent volume (#169)
+* DCKUBE-307: Do not print logs when testing helm installation. (#168)
+* DCKUBE-308: Print service URL after installing helm chart (#157)
+* DCKUBE-331: Mount additional libraries in DB connectivity pod. (#162)
+* DCKUBE-282: Update icons to SVG (#164)
+* DCKUBE-322: Revert previous enabling of Synchrony by default for now … (#160)
+* DCKUBE-322: Add resources stanza for Synchrony and inject values into startup (#151)
 
 ### Default value changes
 
@@ -264,7 +514,7 @@ index a39d4ae..8e148f3 100644
 +      maxHeap: "2g"
 +      # -- The memory allocated for the Synchrony stack
 +      stackSize: "2048k"
-+    container: 
++    container:
 +      requests:
 +        cpu: "2"
 +        memory: "2.5G"
@@ -273,7 +523,7 @@ index a39d4ae..8e148f3 100644
    # Confluence service will use to communicate directly with Synchrony, so the URL must be resovable both from inside and
 ```
 
-## 0.10.0 
+## 0.10.0
 
 **Release date:** 2021-06-01
 
@@ -282,8 +532,8 @@ index a39d4ae..8e148f3 100644
 ![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
 
 
-* Version 0.10.0 
-* DCKUBE-332: Update the minimal supported kubernetes version v1.19 (#154) 
+* Version 0.10.0
+* DCKUBE-332: Update the minimal supported kubernetes version v1.19 (#154)
 
 ### Default value changes
 
@@ -291,7 +541,7 @@ index a39d4ae..8e148f3 100644
 # No changes in this release
 ```
 
-## 0.9.0 
+## 0.9.0
 
 **Release date:** 2021-05-25
 
@@ -300,38 +550,38 @@ index a39d4ae..8e148f3 100644
 ![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
 
 
-* Version 0.9.0 
-* Merge branch 'master' into DCKUBE-317-additional-libraries-for-synchron 
-* DCKUBE-317: Fix new line remover 
-* initial commit - changed the max-body-size of request to 250MB for all products and documented in CONFIG.md (#140) 
-* DCKUBE-317: Fix comment for Synchrony additional library 
-* DCKUBE-317: Allow additional volumes mounted to Synchrony 
-* DCKUBE-292: fix the problem with empty ingress URL in Confluence 
-* DCKUBE-317: Added additional libraries for synchrony 
-* Update values.yaml (#139) 
-* Merge branch 'master' into dckube-267-define-minimum-compute-resources 
-* README update for 0.8.0 
-* Merge branch 'dckube-267-define-minimum-compute-resources' of github.com:https://github.com/atlassian/data-center-helm-charts/data-center-helm-charts into dckube-267-define-minimum-compute-resources 
-* DCKUBE-267: Update cpu request sizes 
-* Merge branch 'master' into dckube-267-define-minimum-compute-resources 
-* DCKUBE-267: Update cpu request sizes 
-* Add Ingress path to Confluence setup ingress and add tests (#136) 
-* Added ingress.host into values.yaml with corresponding value injection in ingress.yaml for all apps. Defaults to / (#134) 
-* DCKUBE-267: Wording updates 
-* DCKUBE-267: Initial commit 
-* DCKUBE-205: fix a provisioning a problem when debug flag is false 
-* Merge remote-tracking branch 'origin/issue-712/DCKUBE-205-make-possible-to-run-k8s-tests-in-local-cluster' into issue-712/DCKUBE-205-make-possible-to-run-k8s-tests-in-local-cluster 
-* Revert "DCKUBE-205: define the ingress template as a library" 
-* Revert "DCKUBE-205: use diffent ingress name for setup ingress" 
-* Revert "DCKUBE-205: fix a typo for ingress definitions" 
-* Merge branch 'master' into issue-712/DCKUBE-205-make-possible-to-run-k8s-tests-in-local-cluster 
-* Add Crowd as a tested product (#128) 
-* DCKUBE-205: address review comments 
-* DCKUBE-205: fix a typo for ingress definitions 
-* DCKUBE-205: use diffent ingress name for setup ingress 
-* DCKUBE-205: define the ingress template as a library 
-* DCKUBE-205: more docs 
-* DCKUBE-205: fix the unit tests 
+* Version 0.9.0
+* Merge branch 'master' into DCKUBE-317-additional-libraries-for-synchron
+* DCKUBE-317: Fix new line remover
+* initial commit - changed the max-body-size of request to 250MB for all products and documented in CONFIG.md (#140)
+* DCKUBE-317: Fix comment for Synchrony additional library
+* DCKUBE-317: Allow additional volumes mounted to Synchrony
+* DCKUBE-292: fix the problem with empty ingress URL in Confluence
+* DCKUBE-317: Added additional libraries for synchrony
+* Update values.yaml (#139)
+* Merge branch 'master' into dckube-267-define-minimum-compute-resources
+* README update for 0.8.0
+* Merge branch 'dckube-267-define-minimum-compute-resources' of github.com:https://github.com/atlassian/data-center-helm-charts/data-center-helm-charts into dckube-267-define-minimum-compute-resources
+* DCKUBE-267: Update cpu request sizes
+* Merge branch 'master' into dckube-267-define-minimum-compute-resources
+* DCKUBE-267: Update cpu request sizes
+* Add Ingress path to Confluence setup ingress and add tests (#136)
+* Added ingress.host into values.yaml with corresponding value injection in ingress.yaml for all apps. Defaults to / (#134)
+* DCKUBE-267: Wording updates
+* DCKUBE-267: Initial commit
+* DCKUBE-205: fix a provisioning a problem when debug flag is false
+* Merge remote-tracking branch 'origin/issue-712/DCKUBE-205-make-possible-to-run-k8s-tests-in-local-cluster' into issue-712/DCKUBE-205-make-possible-to-run-k8s-tests-in-local-cluster
+* Revert "DCKUBE-205: define the ingress template as a library"
+* Revert "DCKUBE-205: use diffent ingress name for setup ingress"
+* Revert "DCKUBE-205: fix a typo for ingress definitions"
+* Merge branch 'master' into issue-712/DCKUBE-205-make-possible-to-run-k8s-tests-in-local-cluster
+* Add Crowd as a tested product (#128)
+* DCKUBE-205: address review comments
+* DCKUBE-205: fix a typo for ingress definitions
+* DCKUBE-205: use diffent ingress name for setup ingress
+* DCKUBE-205: define the ingress template as a library
+* DCKUBE-205: more docs
+* DCKUBE-205: fix the unit tests
 
 ### Default value changes
 
@@ -341,7 +591,7 @@ index da3a956..a39d4ae 100644
 --- a/src/main/charts/confluence/values.yaml
 +++ b/src/main/charts/confluence/values.yaml
 @@ -11,7 +11,7 @@ image:
- 
+
  serviceAccount:
    # -- Specifies the name of the ServiceAccount to be used by the pods.
 -  # If not specified, but the the "serviceAccount.create" flag is set, then the ServiceAccount name will be auto-generated,
@@ -383,7 +633,7 @@ index da3a956..a39d4ae 100644
      # -- The number of consecutive failures of the Confluence container readiness probe before the pod fails readiness checks
      failureThreshold: 30
 @@ -105,31 +105,35 @@ confluence:
- 
+
    resources:
      jvm:
 +      # -- JVM memory arguments below are based on the defaults defined for the Confluence docker container, see:
@@ -401,7 +651,7 @@ index da3a956..a39d4ae 100644
      # That means the maximum heap size, the reserved code cache size, plus other JVM overheads, must be accommodated.
      # Allowing for (maxHeap+codeCache)*1.5 would be an example.
 -    container: {}
-+    container: 
++    container:
      #  limits:
 -    #    cpu: "4"
 -    #    memory: "2G"
@@ -412,7 +662,7 @@ index da3a956..a39d4ae 100644
 +      requests:
 +        cpu: "2" # -- If changing the cpu value update additional JVM arg 'ActiveProcessorCount' below
 +        memory: "2G"
- 
+
    # -- Specifies a list of additional arguments that can be passed to the Confluence JVM, e.g. system properties
 -  additionalJvmArgs: []
 -#    - -Dfoo=bar
@@ -421,7 +671,7 @@ index da3a956..a39d4ae 100644
 +    # -- The value defined for ActiveProcessorCount should correspond to that provided for 'container.requests.cpu'
 +    # see: https://docs.oracle.com/en/java/javase/11/tools/java.html#GUID-3B1CE181-CD30-4178-9602-230B800D4FAE
 +    - -XX:ActiveProcessorCount=2
- 
+
    # -- Specifies a list of additional Java libraries that should be added to the Confluence container.
 -  # Each item in the list should specify the name of the volume which contain the library, as well as the name of the
 +  # Each item in the list should specify the name of the volume that contains the library, as well as the name of the
@@ -431,7 +681,7 @@ index da3a956..a39d4ae 100644
 @@ -153,10 +157,14 @@ confluence:
    # See https://hub.docker.com/r/atlassian/confluence-server for supported variables.
    additionalEnvironmentVariables: []
- 
+
 +  jvmDebug:
 +    # -- If set to true, Confluence JVM will be started with debugging port 5005 open.
 +    enabled: false
@@ -466,7 +716,7 @@ index da3a956..a39d4ae 100644
 +#    - volumeName:
 +#      subDirectory:
 +#      fileName:
- 
+
  ingress:
    # -- True if an Ingress Resource should be created.
 @@ -193,9 +209,11 @@ ingress:
@@ -479,12 +729,12 @@ index da3a956..a39d4ae 100644
    host:
 +  # -- The base path for the ingress rule.
 +  path: "/"
-   # -- The custom annotations that should be applied to the Ingress 
+   # -- The custom annotations that should be applied to the Ingress
    # Resource when not using the Kubernetes ingress-nginx controller.
    annotations: {}
 @@ -206,9 +224,9 @@ ingress:
    tlsSecretName:
- 
+
  fluentd:
 -  # -- True if the fluentd sidecar should be added to each pod
 +  # -- True if the Fluentd sidecar should be added to each pod
@@ -497,7 +747,7 @@ index da3a956..a39d4ae 100644
 @@ -225,18 +243,18 @@ fluentd:
    #     tag confluence-access-logs
    #   </source>
- 
+
 - # -- The name of the image containing the fluentd sidecar
 + # -- The name of the image containing the Fluentd sidecar
    imageName: fluent/fluentd-kubernetes-daemonset:v1.11.5-debian-elasticsearch7-1.2
@@ -554,11 +804,11 @@ index da3a956..a39d4ae 100644
 +# name references existing ConfigMap or secret name. VolumeMount and Volumes are added with this name and index position,
 +# for example, custom-config-0, keystore-2
  additionalFiles: []
- 
+
  #  - name: custom-config
 ```
 
-## 0.7.0 
+## 0.7.0
 
 **Release date:** 2021-05-10
 
@@ -567,7 +817,7 @@ index da3a956..a39d4ae 100644
 ![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
 
 
-* Merge branch 'master' into issue-712/DCKUBE-205-make-possible-to-run-k8s-tests-in-local-cluster 
+* Merge branch 'master' into issue-712/DCKUBE-205-make-possible-to-run-k8s-tests-in-local-cluster
 
 ### Default value changes
 
@@ -626,7 +876,7 @@ index 08095d6..da3a956 100644
  #    key: log4j.properties
 ```
 
-## 0.1.0 
+## 0.1.0
 
 **Release date:** 2021-05-07
 
@@ -635,7 +885,7 @@ index 08095d6..da3a956 100644
 ![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
 
 
-* DCKUBE-205 Allow addition of entries in /etc/hosts for each pod. 
+* DCKUBE-205 Allow addition of entries in /etc/hosts for each pod.
 
 ### Default value changes
 
@@ -659,7 +909,7 @@ index 0ae8cf2..08095d6 100644
 +#    - "bar.local"
 ```
 
-## 0.7.0 
+## 0.7.0
 
 **Release date:** 2021-05-07
 
@@ -668,92 +918,92 @@ index 0ae8cf2..08095d6 100644
 ![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
 
 
-* Release 0.7.0 (#123) 
-* Update charts descriptors (#121) 
-* feat (fluentd) extra fluentd customization to (jira / confluence) helm charts (#95) 
-* Update application versions (#116) 
-* DCKUBE-103: add a system to enable collab editing by default 
-* indenting jira's additionalFiles volume mounts and adding to confluence 
-* Merge branch 'master' into issue-712/DCKUBE-205-make-possible-to-run-k8s-tests-in-local-cluster 
-* DCKUBE-205: use separate ingress for setup 
-* Update documentation for 0.6.0 release 
-* DCKUBE-205: increase the default Nginx timeout 
-* feat(perms): Paramterize setPermissions boolean flag (#97) 
-* DCKUBE-205: provide the ability to open debug port on Connie JVM 
-* DCKUBE-205: provide the ability to open debug port on Connie JVM 
-* DCKUBE-205: provide the ability to open debug port on Connie JVM 
-* DCKUBE-231: Max body size should be configurable 
-* DCKUBE-90: Additional details relating to the Ingress controller 
-* Introducing an easier way to mount secrets and configmaps (#102) 
-* Merge branch 'master' into dckube-131-nfs-fixer-removal 
-* DCKUBE-131: fix for initContainer being synthesized twice 
-* Merge branch 'master' into dckube-131-nfs-fixer-removal 
-* DCKUBE-131: Updates to template formatting and readme wording 
-* Merge pull request #98 from https://github.com/atlassian/data-center-helm-charts/dckube-131-nfs-fixer-removal 
-* DCKUBE-131: Alter NFS permissions via init container 
-* feat(range): Fix support for multiple plugins 
-* ISSUE-85: Add context path for Confluence 
-* Update READMEs for 0.5.0 release 
-* DCNG-1021 fix stray CR for Confluence 
-* DCNG-976 remove unnecessary local-home volume mount from confluence fluentd container 
-* DCNG-976 replace Confluence chart fluentd log file tail input, with HTTP events posted direct from Confluence 
-* Merge pull request #59 from https://github.com/atlassian/data-center-helm-charts/minor-cleanup-and-Azure-related-fixes 
-* DCNG-976 remove duplicate additionalContainers from confluence chart 
-* Merge remote-tracking branch 'origin/master' into DCNG-976-efk 
-* Fix gid value 
-* Merge remote-tracking branch 'origin/master' into DCNG-976-efk 
-* OpenShift support (#56) 
-* Merge remote-tracking branch 'origin/master' into DCNG-976-efk 
-* DCNG-977 enable access logs in Confluence by default, for consistency with Jira+BB 
-* DCNG-977 document use of double-mounted local-home volume 
-* DCNG-783 minor cleanup and Azure related fixes 
-* DCNG-977 capture Confluence tomcat/access logs into local-home volume 
-* DCNG-976 limit fluentd to just atlassian-confluence.log 
-* DCNG-976 use fluent/fluentd-kubernetes-daemonset for the sidecar 
-* DCNG-976 use subPath to limit the scope of the local-hme volumeMount in the fluentd container. 
-* DCNG-976 add support for EFK (Elasticsearch/Fluentd/Kibana) stack 
-* DCNG-925 support for BYO NFS server 
-* DCNG-961 Set confluence.clusterNodeName.useHostname sysprop 
-* default customVolume chart value to empty map , to avoid helm warning 
-* Add optional TLS to ingress spec 
-* DCNG-892 simplify config of https/http 
-* DCNG-892 update docs 
-* DCNG-892 Configure the created ingress as nginx by default 
-* DCNG-892 Move ingress value structure up to top level 
-* DCNG-892 Add Ingress template to the Helm charts, and activate it for EKS testing 
-* DCNG-927 Tweak doco for clarity 
-* DCNG-927 Allow Tomcat ingress https/secure config to be changed for Jira/Confluence, and make consistent with Bitbucket 
-* DCNG-921 add doco for enabling clustering 
-* DCNG-921 disable clustering by defaault 
-* DCNG-920 Disable Synchrony by default, but keep enabled for integration testing 
-* DCNG-913 Make bitbucket/confluence license secret optional 
-* DCNG-914 make jira/confluence DB config values fully optional 
-* DCNG-893 move emptyDir volume defaults back into the templates 
-* DCNG-893 Make localHome/sharedHome configuration more consistent by adding an optional shared-home PVC to the chart 
-* rename localHome.persistentVolumeClaim.enabled to .create 
-* DCNG-893 update documentation 
-* DCNG-893 rework how volumes are customised in the Confluence chart 
-* DCNG-893 disable PVs by default on Bitbucket and Confluence 
-* DCNG-898 add a series of unit tests for the serviceAccount and image config rendering 
-* DCNG-899 Added service account to db-connectivity-test 
-* DCNG-897 Use "before-hook-creation,hook-succeeded" deletion policy 
-* Merge remote-tracking branch 'origin/master' into DCNG-897 
-* DCNG-897 Add hook-delete-policy to chart tests and nfs-fixer job 
-* DCNG-894 Add a ServiceAccount, ClusterRole and ClusterRoleBinding to the Confluence chart 
-* DCNG-880 Added support for custom builds in kubeVersion 
-* DCNG-853 Fixed kubeVersion 
-* DCNG-853 Updated products' charts 
-* confluence 7.9.0 is out 
-* DCNG-856 add -n to each command in NOTES.txt 
-* DCNG-856 Add NOTES.txt 
-* DCNG-849 avoid incorrect rendering for empty  additionalEnvironmentVariables 
-* DCNG-849 check for the presense of additionalLabels so we don't render an empty {} 
-* Merge pull request #6 from https://github.com/atlassian/data-center-helm-charts/DCNG-849 
-* DCNG-850 add extension point for additional environment variables 
-* DCNG-848 add extension point for additional labels 
-* Merge pull request #3 from https://github.com/atlassian/data-center-helm-charts/DCNG-848 
-* DCNG-866 Replace hardcoded image pull policy with value placeholder 
-* DCNG-848 Add support for additional volumes and volume mounts 
+* Release 0.7.0 (#123)
+* Update charts descriptors (#121)
+* feat (fluentd) extra fluentd customization to (jira / confluence) helm charts (#95)
+* Update application versions (#116)
+* DCKUBE-103: add a system to enable collab editing by default
+* indenting jira's additionalFiles volume mounts and adding to confluence
+* Merge branch 'master' into issue-712/DCKUBE-205-make-possible-to-run-k8s-tests-in-local-cluster
+* DCKUBE-205: use separate ingress for setup
+* Update documentation for 0.6.0 release
+* DCKUBE-205: increase the default Nginx timeout
+* feat(perms): Paramterize setPermissions boolean flag (#97)
+* DCKUBE-205: provide the ability to open debug port on Connie JVM
+* DCKUBE-205: provide the ability to open debug port on Connie JVM
+* DCKUBE-205: provide the ability to open debug port on Connie JVM
+* DCKUBE-231: Max body size should be configurable
+* DCKUBE-90: Additional details relating to the Ingress controller
+* Introducing an easier way to mount secrets and configmaps (#102)
+* Merge branch 'master' into dckube-131-nfs-fixer-removal
+* DCKUBE-131: fix for initContainer being synthesized twice
+* Merge branch 'master' into dckube-131-nfs-fixer-removal
+* DCKUBE-131: Updates to template formatting and readme wording
+* Merge pull request #98 from https://github.com/atlassian/data-center-helm-charts/dckube-131-nfs-fixer-removal
+* DCKUBE-131: Alter NFS permissions via init container
+* feat(range): Fix support for multiple plugins
+* ISSUE-85: Add context path for Confluence
+* Update READMEs for 0.5.0 release
+* DCNG-1021 fix stray CR for Confluence
+* DCNG-976 remove unnecessary local-home volume mount from confluence fluentd container
+* DCNG-976 replace Confluence chart fluentd log file tail input, with HTTP events posted direct from Confluence
+* Merge pull request #59 from https://github.com/atlassian/data-center-helm-charts/minor-cleanup-and-Azure-related-fixes
+* DCNG-976 remove duplicate additionalContainers from confluence chart
+* Merge remote-tracking branch 'origin/master' into DCNG-976-efk
+* Fix gid value
+* Merge remote-tracking branch 'origin/master' into DCNG-976-efk
+* OpenShift support (#56)
+* Merge remote-tracking branch 'origin/master' into DCNG-976-efk
+* DCNG-977 enable access logs in Confluence by default, for consistency with Jira+BB
+* DCNG-977 document use of double-mounted local-home volume
+* DCNG-783 minor cleanup and Azure related fixes
+* DCNG-977 capture Confluence tomcat/access logs into local-home volume
+* DCNG-976 limit fluentd to just atlassian-confluence.log
+* DCNG-976 use fluent/fluentd-kubernetes-daemonset for the sidecar
+* DCNG-976 use subPath to limit the scope of the local-hme volumeMount in the fluentd container.
+* DCNG-976 add support for EFK (Elasticsearch/Fluentd/Kibana) stack
+* DCNG-925 support for BYO NFS server
+* DCNG-961 Set confluence.clusterNodeName.useHostname sysprop
+* default customVolume chart value to empty map , to avoid helm warning
+* Add optional TLS to ingress spec
+* DCNG-892 simplify config of https/http
+* DCNG-892 update docs
+* DCNG-892 Configure the created ingress as nginx by default
+* DCNG-892 Move ingress value structure up to top level
+* DCNG-892 Add Ingress template to the Helm charts, and activate it for EKS testing
+* DCNG-927 Tweak doco for clarity
+* DCNG-927 Allow Tomcat ingress https/secure config to be changed for Jira/Confluence, and make consistent with Bitbucket
+* DCNG-921 add doco for enabling clustering
+* DCNG-921 disable clustering by defaault
+* DCNG-920 Disable Synchrony by default, but keep enabled for integration testing
+* DCNG-913 Make bitbucket/confluence license secret optional
+* DCNG-914 make jira/confluence DB config values fully optional
+* DCNG-893 move emptyDir volume defaults back into the templates
+* DCNG-893 Make localHome/sharedHome configuration more consistent by adding an optional shared-home PVC to the chart
+* rename localHome.persistentVolumeClaim.enabled to .create
+* DCNG-893 update documentation
+* DCNG-893 rework how volumes are customised in the Confluence chart
+* DCNG-893 disable PVs by default on Bitbucket and Confluence
+* DCNG-898 add a series of unit tests for the serviceAccount and image config rendering
+* DCNG-899 Added service account to db-connectivity-test
+* DCNG-897 Use "before-hook-creation,hook-succeeded" deletion policy
+* Merge remote-tracking branch 'origin/master' into DCNG-897
+* DCNG-897 Add hook-delete-policy to chart tests and nfs-fixer job
+* DCNG-894 Add a ServiceAccount, ClusterRole and ClusterRoleBinding to the Confluence chart
+* DCNG-880 Added support for custom builds in kubeVersion
+* DCNG-853 Fixed kubeVersion
+* DCNG-853 Updated products' charts
+* confluence 7.9.0 is out
+* DCNG-856 add -n to each command in NOTES.txt
+* DCNG-856 Add NOTES.txt
+* DCNG-849 avoid incorrect rendering for empty  additionalEnvironmentVariables
+* DCNG-849 check for the presense of additionalLabels so we don't render an empty {}
+* Merge pull request #6 from https://github.com/atlassian/data-center-helm-charts/DCNG-849
+* DCNG-850 add extension point for additional environment variables
+* DCNG-848 add extension point for additional labels
+* Merge pull request #3 from https://github.com/atlassian/data-center-helm-charts/DCNG-848
+* DCNG-866 Replace hardcoded image pull policy with value placeholder
+* DCNG-848 Add support for additional volumes and volume mounts
 
 ### Default value changes
 
@@ -765,7 +1015,7 @@ index 88b9260..820308f 100644
 @@ -9,18 +9,41 @@ image:
    # -- The docker image tag to be used. Defaults to the Chart appVersion.
    tag:
- 
+
 -# -- Specifies which serviceAccount to use for the pods. If not specified, the kubernetes default will be used.
 -serviceAccountName:
 +serviceAccount:
@@ -789,7 +1039,7 @@ index 88b9260..820308f 100644
 +    name:
 +    # -- true if a ClusterRoleBinding should be created, or false if it already exists
 +    create: true
- 
+
  database:
    # -- The type of database being used.
    # Valid values include 'postgresql', 'mysql', 'oracle', 'mssql'.
@@ -867,7 +1117,7 @@ index 88b9260..820308f 100644
 @@ -93,7 +145,19 @@ confluence:
  #      subDirectory:
  #      fileName:
- 
+
 +  # -- Defines any additional volumes mounts for the Confluence container.
 +  # These can refer to existing volumes, or new volumes can be defined in volumes.additional.
 +  additionalVolumeMounts: []
@@ -887,7 +1137,7 @@ index 88b9260..820308f 100644
 @@ -117,37 +181,118 @@ synchrony:
    # outside the Kubernetes cluster.
    ingressUrl:
- 
+
 +ingress:
 +  # -- True if an Ingress Resource should be created.
 +  create: false
@@ -903,7 +1153,7 @@ index 88b9260..820308f 100644
 +  maxBodySize: 10m
 +  # -- The fully-qualified hostname of the Ingress Resource.
 +  host:
-+  # -- The custom annotations that should be applied to the Ingress 
++  # -- The custom annotations that should be applied to the Ingress
 +  # Resource when not using the Kubernetes ingress-nginx controller.
 +  annotations: {}
 +  # -- True if the browser communicates with the application over HTTPS.
@@ -952,7 +1202,7 @@ index 88b9260..820308f 100644
  # -- Specify additional annotations to be added to all Confluence and Synchrony pods
  podAnnotations: {}
  #  "name": "value"
- 
+
  volumes:
    localHome:
 -    # -- Specifies the name of the storage class that should be used for the Confluence local-home volume
@@ -1010,11 +1260,11 @@ index 88b9260..820308f 100644
 +  # Note that this will not create any corresponding volume mounts;
 +  # those needs to be defined in confluence.additionalVolumeMounts
 +  additional: []
- 
+
  # -- Standard Kubernetes node-selectors that will be applied to all Confluence and Synchrony pods
  nodeSelector: {}
 @@ -163,3 +308,26 @@ additionalContainers: []
- 
+
  # -- Additional initContainer definitions that will be added to all Confluence pods
  additionalInitContainers: []
 +
@@ -1042,7 +1292,7 @@ index 88b9260..820308f 100644
 +#    mountPath: /var/ssl
 ```
 
-## 0.1.0 
+## 0.1.0
 
 **Release date:** 2020-11-04
 
@@ -1050,7 +1300,7 @@ index 88b9260..820308f 100644
 ![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
 
 
-* OSR-523 Snapshot of helm charts and test code from internal repo 
+* OSR-523 Snapshot of helm charts and test code from internal repo
 
 ### Default value changes
 

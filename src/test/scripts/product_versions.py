@@ -8,7 +8,8 @@ known_supported_version = {
 	'jira-software': '8.13.8',
 	'confluence': '7.12.2',
 	'stash': '7.12.1',
-	'bamboo': '8.1.1'  # Bamboo has not LTS versions.
+	'mesh': '2.0.1',
+	'bamboo': '8.1.1'  # Bamboo has no LTS versions.
 }
 
 # If tag suffix is desired - e.g. 7.8.0-jdk11 -> tag_suffix = "-jdk11"
@@ -34,9 +35,14 @@ def get_lts_version(argv):
 			current_feeds = urllib.request.urlopen(url_current).read()
 			feeds += loadJSON(current_feeds)
 
-			# Filter all LTS versions and sort based on version
-			lts_versions = [x for x in feeds if x['edition'].lower() == 'enterprise']
-			sortedVersions = sorted(lts_versions, key=lambda k:cversion(k['version']), reverse=True)
+			# Get the latest non-lts version if the second arg is provided
+			if len(argv) > 1:
+			    fetch_latest = argv[1].lower()
+			    sortedVersions = sorted(feeds, key=lambda k:cversion(k['version']), reverse=True)
+			else:
+				# Filter all LTS versions and sort based on version
+				lts_versions = [x for x in feeds if x['edition'].lower() == 'enterprise']
+				sortedVersions = sorted(lts_versions, key=lambda k:cversion(k['version']), reverse=True)
 
 			if len(sortedVersions) > 0:
 				# Pick the latest LTS product version
@@ -54,7 +60,7 @@ def get_lts_version(argv):
 		lts_version = f"{lts_version}{tag_suffix}"
 	else:
 		lts_version = 'unknown'
-
+	
 	return lts_version
 
 

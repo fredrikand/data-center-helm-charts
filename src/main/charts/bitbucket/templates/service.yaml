@@ -11,6 +11,12 @@ metadata:
     {{- end }}
 spec:
   type: {{ .Values.bitbucket.service.type }}
+  sessionAffinity: {{ .Values.bitbucket.service.sessionAffinity }}
+  {{- if .Values.bitbucket.service.sessionAffinityConfig.clientIP.timeoutSeconds }}
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: {{ .Values.bitbucket.service.sessionAffinityConfig.clientIP.timeoutSeconds }}
+  {{- end }}
   {{- if and (eq .Values.bitbucket.service.type "LoadBalancer") (not (empty .Values.bitbucket.service.loadBalancerIP)) }}
   loadBalancerIP: {{ .Values.bitbucket.service.loadBalancerIP }}
   {{- end }}
@@ -19,13 +25,15 @@ spec:
       targetPort: http
       protocol: TCP
       name: http
-    - port: {{ .Values.bitbucket.ports.ssh }}
+    - port: {{ .Values.bitbucket.service.sshPort }}
       targetPort: ssh
       protocol: TCP
       name: ssh
+  {{- if not .Values.bitbucket.hazelcastService.enabled }}
     - port: {{ .Values.bitbucket.ports.hazelcast }}
       targetPort: hazelcast
       protocol: TCP
       name: hazelcast
+  {{- end }}
   selector:
     {{- include "common.labels.selectorLabels" . | nindent 4 }}

@@ -5,10 +5,10 @@ kind: ServiceAccount
 metadata:
   name: unittest-jira
   labels:
-    helm.sh/chart: jira-1.7.1
+    helm.sh/chart: jira-1.16.6
     app.kubernetes.io/name: jira
     app.kubernetes.io/instance: unittest-jira
-    app.kubernetes.io/version: "9.4.0"
+    app.kubernetes.io/version: "9.4.12"
     app.kubernetes.io/managed-by: Helm
 ---
 # Source: jira/templates/config-jvm.yaml
@@ -17,18 +17,67 @@ kind: ConfigMap
 metadata:
   name: unittest-jira-jvm-config
   labels:
-    helm.sh/chart: jira-1.7.1
+    helm.sh/chart: jira-1.16.6
     app.kubernetes.io/name: jira
     app.kubernetes.io/instance: unittest-jira
-    app.kubernetes.io/version: "9.4.0"
+    app.kubernetes.io/version: "9.4.12"
     app.kubernetes.io/managed-by: Helm
 data:
   additional_jvm_args: >-
     -Datlassian.logging.cloud.enabled=false
     -XX:ActiveProcessorCount=2
+    -javaagent:/var/atlassian/application-data/shared-home/jmx_prometheus_javaagent.jar=9999:/opt/atlassian/jmx/jmx-config.yaml
   max_heap: 768m
   min_heap: 384m
   reserved_code_cache: 512m
+---
+# Source: jira/templates/configmap-jmx-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: unittest-jira-jmx-config
+  labels:
+    helm.sh/chart: jira-1.16.6
+    app.kubernetes.io/name: jira
+    app.kubernetes.io/instance: unittest-jira
+    app.kubernetes.io/version: "9.4.12"
+    app.kubernetes.io/managed-by: Helm
+data:
+  jmx-config.yaml: |
+    ---
+    startDelaySeconds: 0
+    rules:
+      - pattern: '(java.lang)<type=(\w+)><>(\w+):'
+        name: java_lang_$2_$3
+      - pattern: 'java.lang<type=Memory><HeapMemoryUsage>(\w+)'
+        name: java_lang_Memory_HeapMemoryUsage_$1
+      - pattern: 'java.lang<name=G1 (\w+) Generation, type=GarbageCollector><>(\w+)'
+        name: java_lang_G1_$1_Generation_$2
+      - pattern: '.*'
+    blacklistObjectNames:
+      - 'com.atlassian.jira:connectionpool=connections,connection=*,name=BasicDataSource'
+---
+# Source: jira/templates/service-jmx.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: unittest-jira-jmx
+  labels:
+    helm.sh/chart: jira-1.16.6
+    app.kubernetes.io/name: jira
+    app.kubernetes.io/instance: unittest-jira
+    app.kubernetes.io/version: "9.4.12"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9999
+      targetPort: jmx
+      name: jmx
+  selector:
+    app.kubernetes.io/name: jira
+    app.kubernetes.io/instance: unittest-jira
 ---
 # Source: jira/templates/service.yaml
 apiVersion: v1
@@ -36,14 +85,15 @@ kind: Service
 metadata:
   name: unittest-jira
   labels:
-    helm.sh/chart: jira-1.7.1
+    helm.sh/chart: jira-1.16.6
     app.kubernetes.io/name: jira
     app.kubernetes.io/instance: unittest-jira
-    app.kubernetes.io/version: "9.4.0"
+    app.kubernetes.io/version: "9.4.12"
     app.kubernetes.io/managed-by: Helm
   annotations:
 spec:
   type: ClusterIP
+  sessionAffinity: None
   ports:
     - port: 80
       targetPort: http
@@ -59,10 +109,10 @@ kind: StatefulSet
 metadata:
   name: unittest-jira
   labels:
-    helm.sh/chart: jira-1.7.1
+    helm.sh/chart: jira-1.16.6
     app.kubernetes.io/name: jira
     app.kubernetes.io/instance: unittest-jira
-    app.kubernetes.io/version: "9.4.0"
+    app.kubernetes.io/version: "9.4.12"
     app.kubernetes.io/managed-by: Helm
 spec:
   replicas: 1
@@ -74,12 +124,18 @@ spec:
   template:
     metadata:
       annotations:
+        checksum/config-jvm: b7b2a7ce3241d00958886d73e9c8035369e39d2a82281f6ef53fc3316f80aef8
       labels:
         app.kubernetes.io/name: jira
         app.kubernetes.io/instance: unittest-jira
     spec:
       serviceAccountName: unittest-jira
       terminationGracePeriodSeconds: 30
+      hostAliases:
+        - hostnames:
+          - foo.local
+          - bar.local
+          ip: 127.0.0.1
       securityContext:
         fsGroup: 2001
       initContainers:
@@ -92,9 +148,18 @@ spec:
             - name: shared-home
               mountPath: "/shared-home"
           command: ["sh", "-c", "(chgrp 2001 /shared-home; chmod g+w /shared-home)"]
+        - name: fetch-jmx-exporter
+          image: bitnami/jmx-exporter:0.18.0
+          command: ["cp"]
+          args: ["/opt/bitnami/jmx-exporter/jmx_prometheus_javaagent.jar", "/var/atlassian/application-data/shared-home"]
+          securityContext:
+            runAsUser: 0
+          volumeMounts:
+            - mountPath: "/var/atlassian/application-data/shared-home"
+              name: shared-home
       containers:
         - name: jira
-          image: "atlassian/jira-software:9.4.0"
+          image: "atlassian/jira-software:9.4.12"
           imagePullPolicy: IfNotPresent
           env:
             - name: ATL_TOMCAT_SCHEME
@@ -137,13 +202,17 @@ spec:
             - name: ehcacheobject
               containerPort: 40011
               protocol: TCP
+            - name: jmx
+              containerPort: 9999
+              protocol: TCP
           readinessProbe:
             httpGet:
               port: 8080
               path: /status
             initialDelaySeconds: 10
             periodSeconds: 5
-            failureThreshold: 30
+            timeoutSeconds: 1
+            failureThreshold: 10
           resources:
             requests:
               cpu: "2"
@@ -156,15 +225,21 @@ spec:
               subPath: "log"
             - name: shared-home
               mountPath: "/var/atlassian/application-data/shared-home"
+            - name: jmx-config
+              mountPath: /opt/atlassian/jmx
           lifecycle:
             preStop:
               exec:
                 command: ["sh", "-c", "/shutdown-wait.sh"]
+      priorityClassName: high
       volumes:
         - name: local-home
           emptyDir: {}
         - name: shared-home
           emptyDir: {}
+        - name: jmx-config
+          configMap:
+            name: unittest-jira-jmx-config
 ---
 # Source: jira/templates/tests/test-application-status.yaml
 apiVersion: v1
@@ -175,10 +250,10 @@ metadata:
     "helm.sh/hook": test
     "helm.sh/hook-delete-policy": "before-hook-creation,hook-succeeded"
   labels:
-    helm.sh/chart: jira-1.7.1
+    helm.sh/chart: jira-1.16.6
     app.kubernetes.io/name: jira
     app.kubernetes.io/instance: unittest-jira
-    app.kubernetes.io/version: "9.4.0"
+    app.kubernetes.io/version: "9.4.12"
     app.kubernetes.io/managed-by: Helm
 spec:
   containers:
@@ -207,10 +282,10 @@ metadata:
     "helm.sh/hook": test
     "helm.sh/hook-delete-policy": "before-hook-creation,hook-succeeded"
   labels:
-    helm.sh/chart: jira-1.7.1
+    helm.sh/chart: jira-1.16.6
     app.kubernetes.io/name: jira
     app.kubernetes.io/instance: unittest-jira
-    app.kubernetes.io/version: "9.4.0"
+    app.kubernetes.io/version: "9.4.12"
     app.kubernetes.io/managed-by: Helm
 spec:
   containers:

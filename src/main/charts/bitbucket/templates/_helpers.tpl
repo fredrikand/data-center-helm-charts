@@ -55,6 +55,15 @@ Pod labels
 {{- end }}
 {{- end }}
 
+{{/*
+Mesh Pod labels
+*/}}
+{{- define "bitbucket.mesh.podLabels" -}}
+{{ with .Values.bitbucket.mesh.podLabels }}
+{{- toYaml . }}
+{{- end }}
+{{- end }}
+
 {{- define "bitbucket.baseUrl" -}}
 {{ ternary "https" "http" .Values.ingress.https -}}
 ://
@@ -80,7 +89,7 @@ Create default value for ingress path
 {{/*
 The command that should be run by the nfs-fixer init container to correct the permissions of the shared-home root directory.
 */}}
-{{- define "sharedHome.permissionFix.command" -}}
+{{- define "bitbucket.sharedHome.permissionFix.command" -}}
 {{- $securityContext := .Values.bitbucket.securityContext }}
 {{- with .Values.volumes.sharedHome.nfsPermissionFixer }}
     {{- if .command }}
@@ -120,7 +129,16 @@ The command that should be run to start the fluentd service
 Define pod annotations here to allow template overrides when used as a sub chart
 */}}
 {{- define "bitbucket.podAnnotations" -}}
-{{- with .Values.podAnnotations }}
+{{- range $key, $value := .Values.podAnnotations }}
+{{ $key }}: {{ tpl $value $ | quote }}
+{{- end }}
+{{- end }}
+
+{{/*
+Define pod annotations here to allow template overrides when used as a sub chart
+*/}}
+{{- define "bitbucket.mesh.podAnnotations" -}}
+{{- with .Values.bitbucket.mesh.podAnnotations }}
 {{- toYaml . }}
 {{- end }}
 {{- end }}
@@ -130,6 +148,15 @@ Define additional init containers here to allow template overrides when used as 
 */}}
 {{- define "bitbucket.additionalInitContainers" -}}
 {{- with .Values.additionalInitContainers }}
+{{- toYaml . }}
+{{- end }}
+{{- end }}
+
+{{/*
+Define additional init containers here to allow template overrides when used as a sub chart
+*/}}
+{{- define "bitbucket.mesh.additionalInitContainers" -}}
+{{- with .Values.bitbucket.mesh.additionalInitContainers }}
 {{- toYaml . }}
 {{- end }}
 {{- end }}
@@ -171,6 +198,15 @@ Define additional environment variables here to allow template overrides when us
 {{- end }}
 
 {{/*
+Define additional environment variables here to allow template overrides when used as a sub chart
+*/}}
+{{- define "bitbucket.mesh.additionalEnvironmentVariables" -}}
+{{- with .Values.bitbucket.mesh.additionalEnvironmentVariables }}
+{{- toYaml . }}
+{{- end }}
+{{- end }}
+
+{{/*
 For each additional library declared, generate a volume mount that injects that library into the Bitbucket lib directory
 */}}
 {{- define "bitbucket.additionalLibraries" -}}
@@ -200,6 +236,16 @@ For each additional plugin declared, generate a volume mount that injects that l
 {{- end }}
 {{- end }}
 
+
+{{/*
+Define additional hosts here to allow template overrides when used as a sub chart
+*/}}
+{{- define "bitbucket.additionalHosts" -}}
+{{- with .Values.additionalHosts }}
+{{- toYaml . }}
+{{- end }}
+{{- end }}
+
 {{- define "bitbucket.volumes" -}}
 {{ if not .Values.volumes.localHome.persistentVolumeClaim.create }}
 {{ include "bitbucket.volumes.localHome" . }}
@@ -207,6 +253,13 @@ For each additional plugin declared, generate a volume mount that injects that l
 {{ include "bitbucket.volumes.sharedHome" . }}
 {{- with .Values.volumes.additional }}
 {{- toYaml . | nindent 0 }}
+{{- end }}
+{{- if .Values.bitbucket.additionalCertificates.secretName }}
+- name: keystore
+  emptyDir: {}
+- name: certs
+  secret:
+    secretName: {{ .Values.bitbucket.additionalCertificates.secretName }}
 {{- end }}
 {{- end }}
 
@@ -229,6 +282,9 @@ For each additional plugin declared, generate a volume mount that injects that l
 {{ else if .Values.volumes.sharedHome.customVolume }}
 - name: shared-home
 {{- toYaml .Values.volumes.sharedHome.customVolume | nindent 2 }}
+{{- else if and (eq .Values.bitbucket.applicationMode "mirror") .Values.monitoring.exposeJmxMetrics }}
+- name: shared-home
+  emptyDir: {}
 {{- end }}
 {{- end }}
 
@@ -265,6 +321,23 @@ volumeClaimTemplates:
       {{- toYaml . | nindent 6 }}
     {{- end }}
 {{- end }}
+{{- end }}
+{{- end }}
+
+{{- define "bitbucket.mesh.volumeClaimTemplates" -}}
+{{- if .Values.bitbucket.mesh.volume.create }}
+volumeClaimTemplates:
+- metadata:
+    name: mesh-home
+  spec:
+    accessModes: [ "ReadWriteOnce" ]
+    {{- if .Values.bitbucket.mesh.volume.storageClass }}
+    storageClassName: {{ .Values.bitbucket.mesh.volume.storageClass | quote }}
+    {{- end }}
+    {{- with .Values.bitbucket.mesh.volume.resources }}
+    resources:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
 {{- end }}
 {{- end }}
 
@@ -353,7 +426,7 @@ volumeClaimTemplates:
 
 {{- define "bitbucket.elasticSearchEnvVars" -}}
 {{- if or .Values.bitbucket.elasticSearch.baseUrl .Values.bitbucket.clustering.enabled }}
-- name: ELASTICSEARCH_ENABLED
+- name: SEARCH_ENABLED
   value: "false"
 {{- end }}
 {{ with .Values.bitbucket.elasticSearch.baseUrl }}
@@ -382,3 +455,19 @@ volumeClaimTemplates:
     {{- . }}
     {{- end }}
 {{- end}}
+
+{{- define "bitbucket.addCrtToKeystoreCmd" }}
+{{- if .Values.bitbucket.additionalCertificates.customCmd}}
+{{ .Values.bitbucket.additionalCertificates.customCmd}}
+{{- else }}
+set -e; cp $JAVA_HOME/lib/security/cacerts /var/ssl/cacerts; for crt in /tmp/crt/*.*; do echo "Adding $crt to keystore"; keytool -import -keystore /var/ssl/cacerts -storepass changeit -noprompt -alias $(echo $(basename $crt)) -file $crt; done;
+{{- end }}
+{{- end }}
+
+{{- define "bitbucketMesh.addCrtToKeystoreCmd" }}
+{{- if .Values.bitbucket.mesh.additionalCertificates.customCmd}}
+{{ .Values.bitbucket.mesh.additionalCertificates.customCmd}}
+{{- else }}
+set -e; cp $JAVA_HOME/lib/security/cacerts /var/ssl/cacerts; for crt in /tmp/crt/*.*; do echo "Adding $crt to keystore"; keytool -import -keystore /var/ssl/cacerts -storepass changeit -noprompt -alias $(echo $(basename $crt)) -file $crt; done;
+{{- end }}
+{{- end }}
